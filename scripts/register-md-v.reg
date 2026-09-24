@@ -1,0 +1,35 @@
+Windows Registry Editor Version 5.00
+
+; ============================================================
+; md-v 免安装文件关联脚本（当前用户 HKCU，无需管理员权限）
+;
+; 用法：
+;   1. 把本文件中所有  C:\\Path\\To\\md-v.exe  替换为 md-v.exe
+;      的实际完整路径（注意保持双反斜杠），共 3 处；
+;   2. 保存后双击导入；
+;   3. 效果：.md / .markdown 文件图标变为 md-v 图标，
+;      资源管理器右键出现 "Open with md-v"，
+;      双击 .md 默认用 md-v 打开。
+; 卸载：删除注册表项 HKCU\Software\Classes\.md、
+;       HKCU\Software\Classes\.markdown、
+;       HKCU\Software\Classes\md-v.md 即可。
+; ============================================================
+
+[HKEY_CURRENT_USER\Software\Classes\.md]
+@="md-v.md"
+
+[HKEY_CURRENT_USER\Software\Classes\.markdown]
+@="md-v.md"
+
+[HKEY_CURRENT_USER\Software\Classes\md-v.md]
+@="Markdown Document"
+
+[HKEY_CURRENT_USER\Software\Classes\md-v.md\DefaultIcon]
+@="C:\\Path\\To\\md-v.exe,0"
+
+[HKEY_CURRENT_USER\Software\Classes\md-v.md\shell\Open with md-v]
+@="Open with md-v"
+"Icon"="C:\\Path\\To\\md-v.exe,0"
+
+[HKEY_CURRENT_USER\Software\Classes\md-v.md\shell\Open with md-v\command]
+@="\"C:\\Path\\To\\md-v.exe\" \"%1\""

@@ -1,0 +1,36 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#4c6ef5"/>
+      <stop offset="0.55" stop-color="#3b4ed8"/>
+      <stop offset="1" stop-color="#232c5e"/>
+    </linearGradient>
+    <linearGradient id="badge" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="1" stop-color="#cdd7ff"/>
+    </linearGradient>
+  </defs>
+
+  <!-- rounded square base -->
+  <rect x="48" y="48" width="928" height="928" rx="208" fill="url(#bg)"/>
+  <rect x="48" y="48" width="928" height="928" rx="208" fill="none" stroke="#ffffff" stroke-opacity="0.14" stroke-width="6"/>
+
+  <!-- subtle document lines motif, upper-left -->
+  <g stroke="#ffffff" stroke-opacity="0.22" stroke-width="22" stroke-linecap="round">
+    <line x1="150" y1="180" x2="380" y2="180"/>
+    <line x1="150" y1="240" x2="320" y2="240"/>
+  </g>
+
+  <!-- main "MD" wordmark -->
+  <text x="500" y="650" text-anchor="middle"
+        font-family="Segoe UI, Arial, Helvetica, sans-serif"
+        font-size="470" font-weight="800" letter-spacing="-14"
+        fill="#ffffff">MD</text>
+
+  <!-- markdown arrow badge, bottom-right -->
+  <circle cx="806" cy="806" r="128" fill="url(#badge)"/>
+  <text x="806" y="884" text-anchor="middle"
+        font-family="Segoe UI, Arial, Helvetica, sans-serif"
+        font-size="205" font-weight="800"
+        fill="#2b3a8f">&#8595;</text>
+</svg>
