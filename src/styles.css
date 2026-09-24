@@ -84,6 +84,7 @@ body.dark {
   background: var(--toolbar-bg);
   border-bottom: 1px solid var(--border);
   flex-shrink: 0;
+  margin-top: 6px;
 }
 
 #tabbar {
@@ -159,7 +160,7 @@ body.dark {
   align-items: center;
   justify-content: flex-start;
   gap: 2px;
-  padding: 6px 8px;
+  padding: 3px 8px;
   border-bottom: 1px solid var(--border);
   flex-shrink: 0;
 }
