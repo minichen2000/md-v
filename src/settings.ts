@@ -6,6 +6,9 @@ export interface Settings {
   lang: Lang;
   fontSize: number;
   splitRatio: number;
+  syncScroll: boolean;
+  showToc: boolean;
+  restoreTabs: boolean;
 }
 
 const KEY = "md-v-settings";
@@ -15,6 +18,9 @@ const DEFAULTS: Settings = {
   lang: "zh-CN",
   fontSize: 14,
   splitRatio: 35,
+  syncScroll: true,
+  showToc: false,
+  restoreTabs: false,
 };
 
 export function loadSettings(): Settings {
@@ -27,6 +33,9 @@ export function loadSettings(): Settings {
       lang: parsed.lang === "en" ? "en" : "zh-CN",
       fontSize: clamp(num(parsed.fontSize, DEFAULTS.fontSize), 10, 28),
       splitRatio: clamp(num(parsed.splitRatio, DEFAULTS.splitRatio), 15, 80),
+      syncScroll: bool(parsed.syncScroll, DEFAULTS.syncScroll),
+      showToc: bool(parsed.showToc, DEFAULTS.showToc),
+      restoreTabs: bool(parsed.restoreTabs, DEFAULTS.restoreTabs),
     };
   } catch {
     return { ...DEFAULTS };
@@ -39,6 +48,10 @@ export function saveSettings(s: Settings): void {
 
 function num(v: unknown, fallback: number): number {
   return typeof v === "number" && Number.isFinite(v) ? v : fallback;
+}
+
+function bool(v: unknown, fallback: boolean): boolean {
+  return typeof v === "boolean" ? v : fallback;
 }
 
 function clamp(v: number, min: number, max: number): number {

@@ -7,13 +7,19 @@ import renderMathInElement from "katex/contrib/auto-render";
 
 const hlLight = document.createElement("style");
 hlLight.textContent = hlLightCss;
+hlLight.dataset.hljsTheme = "light";
 const hlDark = document.createElement("style");
 hlDark.textContent = hlDarkCss;
+hlDark.dataset.hljsTheme = "dark";
 document.head.append(hlLight, hlDark);
 
 export function setHljsTheme(dark: boolean): void {
   hlLight.disabled = dark;
   hlDark.disabled = !dark;
+}
+
+export function getHljsCss(dark: boolean): string {
+  return dark ? hlDarkCss : hlLightCss;
 }
 
 export async function renderPreview(container: HTMLElement, src: string, dark: boolean): Promise<void> {

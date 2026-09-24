@@ -351,3 +351,142 @@ body {
   font-size: 0.9em;
   color: var(--quote-fg);
 }
+
+/* ---- toolbar toggle state ---- */
+
+#toolbar button.on {
+  background: var(--border);
+}
+
+/* ---- dropdown menu ---- */
+
+.menu {
+  position: fixed;
+  z-index: 100;
+  min-width: 180px;
+  max-width: 380px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+  padding: 4px;
+}
+
+.menu-item {
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 13px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.menu-item:hover {
+  background: var(--bg-alt);
+}
+
+.menu-item.disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.menu-item.disabled:hover {
+  background: transparent;
+}
+
+.menu-sep {
+  height: 1px;
+  background: var(--border);
+  margin: 4px 6px;
+}
+
+/* ---- TOC sidebar ---- */
+
+#toc {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 220px;
+  overflow-y: auto;
+  background: var(--bg);
+  border-left: 1px solid var(--border);
+  padding: 8px 4px;
+  z-index: 10;
+}
+
+#workspace.toc-open #preview-pane {
+  padding-right: 244px;
+}
+
+.toc-empty {
+  padding: 12px;
+  color: var(--quote-fg);
+  font-size: 13px;
+}
+
+.toc-item {
+  padding: 3px 8px;
+  font-size: 13px;
+  cursor: pointer;
+  border-radius: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  border-left: 2px solid transparent;
+}
+
+.toc-item:hover {
+  background: var(--bg-alt);
+}
+
+.toc-item.current {
+  color: var(--accent);
+  border-left-color: var(--accent);
+}
+
+/* ---- print (export PDF) ---- */
+
+@media print {
+  body,
+  body.dark {
+    --bg: #ffffff;
+    --fg: #000000;
+    --bg-alt: #f8f8f8;
+    --border: #cccccc;
+    --accent: #0969da;
+    --code-bg: #f5f5f5;
+    --quote-fg: #555555;
+    --quote-border: #cccccc;
+    background: #fff;
+    color: #000;
+  }
+
+  #topbar,
+  #editor-pane,
+  #splitter,
+  #statusbar,
+  #welcome,
+  #toc {
+    display: none !important;
+  }
+
+  #app,
+  #workspace {
+    display: block;
+    height: auto;
+    overflow: visible;
+  }
+
+  #preview-pane {
+    display: block !important;
+    overflow: visible;
+    padding: 0;
+    height: auto;
+  }
+
+  #preview-pane pre {
+    border: 1px solid #ccc;
+  }
+}

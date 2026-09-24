@@ -6,6 +6,9 @@ import { t, setLang, getLang } from "./i18n";
 import { TabStore, fileName, type Tab } from "./tabs";
 import { createEditor } from "./editor";
 import { renderPreview, setHljsTheme } from "./preview";
+import { createToc, type TocController } from "./toc";
+import { addRecent, getRecent, removeRecent, clearRecent } from "./recent";
+import { exportHtml, exportPdf } from "./export";
 import "./styles.css";
 
 const settings: Settings = loadSettings();
@@ -13,6 +16,10 @@ const store = new TabStore();
 
 let editorView: ReturnType<typeof createEditor> | null = null;
 let renderTimer: number | null = null;
+let tocTimer: number | null = null;
+let toc: TocController;
+
+const SESSION_KEY = "md-v-session";
 
 const $ = <T extends HTMLElement>(sel: string): T => document.querySelector(sel) as T;
 
@@ -23,13 +30,19 @@ function buildLayout(): void {
       <div id="tabbar"></div>
       <div id="toolbar">
         <button id="btn-open" data-i18n-title="open">📂</button>
+        <button id="btn-recent" data-i18n-title="recent">▾</button>
         <button id="btn-save" data-i18n-title="save">💾</button>
         <span class="sep"></span>
         <button id="btn-zoom-out" data-i18n-title="zoomOut">A−</button>
         <button id="btn-zoom-in" data-i18n-title="zoomIn">A+</button>
         <span class="sep"></span>
+        <button id="btn-sync" data-i18n-title="syncScroll">🔗</button>
+        <button id="btn-toc" data-i18n-title="toc">☰</button>
         <button id="btn-theme" data-i18n-title="toggleTheme">☀</button>
         <button id="btn-lang" data-i18n-title="toggleLang">EN</button>
+        <span class="sep"></span>
+        <button id="btn-export" data-i18n-title="export">⤓</button>
+        <button id="btn-settings" data-i18n-title="settings">⚙</button>
       </div>
     </div>
     <div id="workspace">
@@ -47,12 +60,67 @@ function buildLayout(): void {
       <div id="editor-pane"></div>
       <div id="splitter"></div>
       <div id="preview-pane"></div>
+      <aside id="toc"></aside>
     </div>
     <div id="statusbar">
       <span id="status-path"></span>
       <span id="status-stats"></span>
     </div>`;
 }
+
+/* ---- dropdown menu ---- */
+
+type MenuEntry = {
+  label: string;
+  checked?: boolean;
+  disabled?: boolean;
+  title?: string;
+  onClick?: () => void;
+} | "sep";
+
+let menuEl: HTMLElement | null = null;
+
+function closeMenu(): void {
+  menuEl?.remove();
+  menuEl = null;
+  window.removeEventListener("mousedown", onMenuOutside, true);
+}
+
+function onMenuOutside(e: Event): void {
+  if (menuEl && !menuEl.contains(e.target as Node)) closeMenu();
+}
+
+function showMenu(anchor: HTMLElement, entries: MenuEntry[]): void {
+  closeMenu();
+  menuEl = document.createElement("div");
+  menuEl.className = "menu";
+  for (const entry of entries) {
+    if (entry === "sep") {
+      const sep = document.createElement("div");
+      sep.className = "menu-sep";
+      menuEl.appendChild(sep);
+      continue;
+    }
+    const item = document.createElement("div");
+    item.className = "menu-item" + (entry.disabled ? " disabled" : "");
+    item.textContent = (entry.checked ? "✓ " : "") + entry.label;
+    if (entry.title) item.title = entry.title;
+    if (!entry.disabled && entry.onClick) {
+      item.addEventListener("click", () => {
+        closeMenu();
+        entry.onClick!();
+      });
+    }
+    menuEl.appendChild(item);
+  }
+  document.body.appendChild(menuEl);
+  const r = anchor.getBoundingClientRect();
+  menuEl.style.top = `${r.bottom + 4}px`;
+  menuEl.style.left = `${Math.min(r.left, window.innerWidth - menuEl.offsetWidth - 8)}px`;
+  window.addEventListener("mousedown", onMenuOutside, true);
+}
+
+/* ---- settings / layout ---- */
 
 function refreshTabBar(): void {
   store.renderBar($("#tabbar"));
@@ -62,6 +130,12 @@ function isDark(): boolean {
   return settings.theme === "dark";
 }
 
+function updateTocVisibility(): void {
+  const visible = settings.showToc && store.active() !== undefined;
+  $("#toc").style.display = visible ? "block" : "none";
+  $("#workspace").classList.toggle("toc-open", visible);
+}
+
 function applySettings(rerender = true): void {
   document.body.classList.toggle("dark", isDark());
   document.documentElement.style.setProperty("--font-size", `${settings.fontSize}px`);
@@ -69,6 +143,9 @@ function applySettings(rerender = true): void {
   setHljsTheme(isDark());
   $("#btn-theme").textContent = isDark() ? "🌙" : "☀";
   $("#btn-lang").textContent = getLang() === "zh-CN" ? "EN" : "中";
+  $("#btn-sync").classList.toggle("on", settings.syncScroll);
+  $("#btn-toc").classList.toggle("on", settings.showToc);
+  updateTocVisibility();
   saveSettings(settings);
   if (rerender) rerenderActive();
 }
@@ -115,6 +192,15 @@ async function renderActivePreview(): Promise<void> {
   const tab = store.active();
   if (!tab) return;
   await renderPreview($("#preview-pane"), tab.doc, isDark());
+  toc.rebuild();
+}
+
+function scheduleTocUpdate(): void {
+  if (tocTimer !== null) return;
+  tocTimer = window.setTimeout(() => {
+    tocTimer = null;
+    toc.updateActive();
+  }, 100);
 }
 
 function rerenderActive(): void {
@@ -141,6 +227,33 @@ function updateStatus(): void {
   statsEl.textContent = `${tab.doc.length} ${t("statusChars")} · ${lines} ${t("statusLines")}`;
 }
 
+/* ---- session persistence (restore tabs) ---- */
+
+function persistSession(): void {
+  const tabs = store.list().filter((tab) => tab.path);
+  const session = {
+    paths: tabs.map((tab) => tab.path as string),
+    active: store.active()?.path ?? null,
+  };
+  localStorage.setItem(SESSION_KEY, JSON.stringify(session));
+}
+
+async function restoreSession(): Promise<void> {
+  try {
+    const raw = localStorage.getItem(SESSION_KEY);
+    if (!raw) return;
+    const session = JSON.parse(raw) as { paths?: string[]; active?: string | null };
+    if (!Array.isArray(session.paths) || session.paths.length === 0) return;
+    await openFiles(session.paths);
+    const target = store.list().find((tab) => tab.path === session.active);
+    if (target) activateTab(target.id);
+  } catch {
+    // corrupted session data; ignore
+  }
+}
+
+/* ---- tabs ---- */
+
 function activateTab(id: number): void {
   const current = store.active();
   if (current && current.id !== id && editorView) {
@@ -156,9 +269,12 @@ function activateTab(id: number): void {
   } else {
     destroyEditor();
     $("#preview-pane").innerHTML = "";
+    toc.clear();
     showWelcome(true);
   }
+  updateTocVisibility();
   updateStatus();
+  persistSession();
 }
 
 function newTab(): void {
@@ -172,9 +288,15 @@ async function openFiles(paths: string[]): Promise<void> {
     try {
       const doc = await invoke<string>("read_file", { path });
       const tab = store.add(path, doc);
+      addRecent(path);
       activateTab(tab.id);
     } catch (e) {
-      window.alert(`${t("openFailed")}${e}`);
+      if (getRecent().includes(path)) {
+        removeRecent(path);
+        window.alert(`${t("openFailed")}${e}\n${t("removedFromRecent")}`);
+      } else {
+        window.alert(`${t("openFailed")}${e}`);
+      }
     }
   }
 }
@@ -207,8 +329,10 @@ async function saveActive(): Promise<void> {
     tab.path = path;
     tab.title = fileName(path);
     tab.dirty = false;
+    addRecent(path);
     refreshTabBar();
     updateStatus();
+    persistSession();
   } catch (e) {
     window.alert(`${t("saveFailed")}${e}`);
   }
@@ -226,12 +350,16 @@ function closeTab(id: number): void {
     else {
       destroyEditor();
       $("#preview-pane").innerHTML = "";
+      toc.clear();
       refreshTabBar();
       showWelcome(true);
+      updateTocVisibility();
       updateStatus();
+      persistSession();
     }
   } else {
     refreshTabBar();
+    persistSession();
   }
 }
 
@@ -240,12 +368,86 @@ function zoom(delta: number): void {
   applySettings(false);
 }
 
+/* ---- sync scroll ---- */
+
+type Pane = "editor" | "preview";
+let scrollSource: Pane | null = null;
+let scrollStamp = 0;
+
+function markSource(pane: Pane): void {
+  scrollSource = pane;
+  scrollStamp = performance.now();
+}
+
+function handlePaneScroll(pane: Pane): void {
+  if (pane === "preview") scheduleTocUpdate();
+  if (!settings.syncScroll) return;
+  const now = performance.now();
+  if (scrollSource !== pane && now - scrollStamp < 300) return; // follower side: ignore
+  markSource(pane);
+  if (!editorView) return;
+  const editorScroller = editorView.scrollDOM;
+  const preview = $("#preview-pane");
+  const [from, to] = pane === "editor" ? [editorScroller, preview] : [preview, editorScroller];
+  const max = from.scrollHeight - from.clientHeight;
+  const ratio = max > 0 ? from.scrollTop / max : 0;
+  to.scrollTop = ratio * Math.max(0, to.scrollHeight - to.clientHeight);
+}
+
+/* ---- menus / export ---- */
+
+function showRecentMenu(): void {
+  const recent = getRecent();
+  const entries: MenuEntry[] = recent.length
+    ? recent.map((p) => ({ label: fileName(p), title: p, onClick: () => void openFiles([p]) }))
+    : [{ label: t("recentEmpty"), disabled: true }];
+  entries.push("sep", {
+    label: t("clearRecent"),
+    disabled: recent.length === 0,
+    onClick: () => clearRecent(),
+  });
+  showMenu($("#btn-recent"), entries);
+}
+
+async function doExportHtml(): Promise<void> {
+  const tab = store.active();
+  if (!tab) return;
+  try {
+    await exportHtml(tab.title.replace(/\.(md|markdown)$/i, ""), $("#preview-pane"), isDark(), settings.fontSize);
+  } catch (e) {
+    window.alert(`${t("exportFailed")}${e}`);
+  }
+}
+
+function showExportMenu(): void {
+  showMenu($("#btn-export"), [
+    { label: t("exportHtml"), onClick: () => void doExportHtml() },
+    { label: t("exportPdf"), onClick: () => exportPdf(isDark()) },
+  ]);
+}
+
+function showSettingsMenu(): void {
+  showMenu($("#btn-settings"), [
+    {
+      label: t("restoreTabs"),
+      checked: settings.restoreTabs,
+      onClick: () => {
+        settings.restoreTabs = !settings.restoreTabs;
+        saveSettings(settings);
+      },
+    },
+  ]);
+}
+
+/* ---- events ---- */
+
 function wireEvents(): void {
   store.onSwitch = activateTab;
   store.onClose = closeTab;
   store.onNew = newTab;
 
   $("#btn-open").addEventListener("click", () => void openDialog());
+  $("#btn-recent").addEventListener("click", () => showRecentMenu());
   $("#btn-save").addEventListener("click", () => void saveActive());
   $("#btn-theme").addEventListener("click", () => {
     settings.theme = isDark() ? "light" : "dark";
@@ -260,6 +462,16 @@ function wireEvents(): void {
   });
   $("#btn-zoom-in").addEventListener("click", () => zoom(1));
   $("#btn-zoom-out").addEventListener("click", () => zoom(-1));
+  $("#btn-sync").addEventListener("click", () => {
+    settings.syncScroll = !settings.syncScroll;
+    applySettings(false);
+  });
+  $("#btn-toc").addEventListener("click", () => {
+    settings.showToc = !settings.showToc;
+    applySettings(false);
+  });
+  $("#btn-export").addEventListener("click", () => showExportMenu());
+  $("#btn-settings").addEventListener("click", () => showSettingsMenu());
 
   window.addEventListener("keydown", (e) => {
     if (!e.ctrlKey) return;
@@ -300,6 +512,20 @@ function wireEvents(): void {
       // not running inside tauri (e.g. plain browser preview)
     });
 
+  // sync scroll: capture scroll from the CodeMirror scroller (view is recreated per tab)
+  const editorPane = $("#editor-pane");
+  editorPane.addEventListener(
+    "scroll",
+    (e) => {
+      if ((e.target as HTMLElement).classList?.contains("cm-scroller")) handlePaneScroll("editor");
+    },
+    true,
+  );
+  editorPane.addEventListener("mouseenter", () => markSource("editor"));
+  const previewPane = $("#preview-pane");
+  previewPane.addEventListener("scroll", () => handlePaneScroll("preview"));
+  previewPane.addEventListener("mouseenter", () => markSource("preview"));
+
   const splitter = $("#splitter");
   splitter.addEventListener("mousedown", (e) => {
     e.preventDefault();
@@ -323,6 +549,7 @@ function wireEvents(): void {
 async function main(): Promise<void> {
   buildLayout();
   setLang(settings.lang);
+  toc = createToc($("#toc"), $("#preview-pane"));
   wireEvents();
   applySettings(false);
   showWelcome(true);
@@ -330,7 +557,11 @@ async function main(): Promise<void> {
 
   try {
     const pending = await invoke<string | null>("take_pending_file");
-    if (pending) await openFiles([pending]);
+    if (pending) {
+      await openFiles([pending]);
+    } else if (settings.restoreTabs) {
+      await restoreSession();
+    }
   } catch {
     // ignore when running outside tauri
   }
