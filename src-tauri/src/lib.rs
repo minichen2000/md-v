@@ -116,29 +116,34 @@ mod context_menu {
         Ok(())
     }
 
-    fn ignore_not_found(r: std::io::Result<()>) -> Result<(), String> {
-        match r {
-            Ok(()) => Ok(()),
-            Err(e) if e.kind() == std::io::ErrorKind::NotFound => Ok(()),
-            Err(e) => Err(e.to_string()),
+    fn reg_delete(args: &[&str]) -> Result<(), String> {
+        // exit code 0 (deleted) and 1 (key/value not found) are both fine
+        let out = std::process::Command::new("reg")
+            .args(args)
+            .output()
+            .map_err(|e| e.to_string())?;
+        match out.status.code() {
+            Some(0) | Some(1) => Ok(()),
+            other => Err(format!("reg {:?} exited with {:?}", args, other)),
         }
     }
 
     pub fn unregister() -> Result<(), String> {
-        let classes = classes()?;
-        // only clear the default value when it points at our ProgID
+        // only clear the ext default value when it points at our ProgID
+        let hkcu = RegKey::predef(HKEY_CURRENT_USER);
         for ext in [".md", ".markdown"] {
-            if let Ok(k) = classes.open_subkey_with_flags(ext, winreg::enums::KEY_SET_VALUE) {
+            if let Ok(k) = hkcu.open_subkey(format!(r"Software\Classes\{}", ext)) {
                 let ours = k
                     .get_value::<String, _>("")
                     .map(|v| v == PROG_ID)
                     .unwrap_or(false);
                 if ours {
-                    ignore_not_found(k.delete_value(""))?;
+                    // winreg's delete_value("") cannot remove the default value; use reg.exe
+                    reg_delete(&["delete", &format!(r"HKCU\Software\Classes\{}", ext), "/ve", "/f"])?;
                 }
             }
         }
-        ignore_not_found(classes.delete_subkey_all(PROG_ID))?;
+        reg_delete(&["delete", &format!(r"HKCU\Software\Classes\{}", PROG_ID), "/f"])?;
         Ok(())
     }
 }
