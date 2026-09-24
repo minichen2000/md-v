@@ -42,6 +42,10 @@ const dicts: Record<Lang, Record<string, string>> = {
     exportPdf: "导出 PDF（打印）",
     exportFailed: "导出失败：",
     htmlFiles: "HTML 文件",
+    contextMenuAdd: "添加右键菜单（Open with md-v）",
+    contextMenuRemove: "移除右键菜单",
+    contextMenuDone: "操作完成",
+    contextMenuFailed: "操作失败：",
   },
   en: {
     untitled: "Untitled",
@@ -84,6 +88,10 @@ const dicts: Record<Lang, Record<string, string>> = {
     exportPdf: "Export PDF (print)",
     exportFailed: "Export failed: ",
     htmlFiles: "HTML files",
+    contextMenuAdd: "Add context menu (Open with md-v)",
+    contextMenuRemove: "Remove context menu",
+    contextMenuDone: "Done",
+    contextMenuFailed: "Operation failed: ",
   },
 };
 

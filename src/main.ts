@@ -9,6 +9,7 @@ import { renderPreview, setHljsTheme } from "./preview";
 import { createToc, type TocController } from "./toc";
 import { addRecent, getRecent, removeRecent, clearRecent } from "./recent";
 import { exportHtml, exportPdf } from "./export";
+import { icons } from "./icons";
 import "./styles.css";
 
 const settings: Settings = loadSettings();
@@ -27,23 +28,23 @@ function buildLayout(): void {
   const app = $("#app");
   app.innerHTML = `
     <div id="topbar">
-      <div id="tabbar"></div>
       <div id="toolbar">
-        <button id="btn-open" data-i18n-title="open">📂</button>
-        <button id="btn-recent" data-i18n-title="recent">▾</button>
-        <button id="btn-save" data-i18n-title="save">💾</button>
+        <button id="btn-open" data-i18n-title="open"></button>
+        <button id="btn-recent" data-i18n-title="recent"></button>
+        <button id="btn-save" data-i18n-title="save"></button>
         <span class="sep"></span>
-        <button id="btn-zoom-out" data-i18n-title="zoomOut">A−</button>
-        <button id="btn-zoom-in" data-i18n-title="zoomIn">A+</button>
+        <button id="btn-zoom-out" class="text-btn" data-i18n-title="zoomOut">A−</button>
+        <button id="btn-zoom-in" class="text-btn" data-i18n-title="zoomIn">A+</button>
         <span class="sep"></span>
-        <button id="btn-sync" data-i18n-title="syncScroll">🔗</button>
-        <button id="btn-toc" data-i18n-title="toc">☰</button>
-        <button id="btn-theme" data-i18n-title="toggleTheme">☀</button>
-        <button id="btn-lang" data-i18n-title="toggleLang">EN</button>
+        <button id="btn-sync" data-i18n-title="syncScroll"></button>
+        <button id="btn-toc" data-i18n-title="toc"></button>
+        <button id="btn-theme" data-i18n-title="toggleTheme"></button>
+        <button id="btn-lang" data-i18n-title="toggleLang"></button>
         <span class="sep"></span>
-        <button id="btn-export" data-i18n-title="export">⤓</button>
-        <button id="btn-settings" data-i18n-title="settings">⚙</button>
+        <button id="btn-export" data-i18n-title="export"></button>
+        <button id="btn-settings" data-i18n-title="settings"></button>
       </div>
+      <div id="tabbar"></div>
     </div>
     <div id="workspace">
       <div id="welcome">
@@ -57,15 +58,24 @@ function buildLayout(): void {
         </ul>
         <p data-i18n="welcomeDrag"></p>
       </div>
+      <aside id="toc"></aside>
       <div id="editor-pane"></div>
       <div id="splitter"></div>
       <div id="preview-pane"></div>
-      <aside id="toc"></aside>
     </div>
     <div id="statusbar">
       <span id="status-path"></span>
       <span id="status-stats"></span>
     </div>`;
+
+  $("#btn-open").innerHTML = icons.open;
+  $("#btn-recent").innerHTML = icons.recent;
+  $("#btn-save").innerHTML = icons.save;
+  $("#btn-sync").innerHTML = icons.sync;
+  $("#btn-toc").innerHTML = icons.toc;
+  $("#btn-lang").innerHTML = icons.lang;
+  $("#btn-export").innerHTML = icons.export;
+  $("#btn-settings").innerHTML = icons.settings;
 }
 
 /* ---- dropdown menu ---- */
@@ -130,19 +140,23 @@ function isDark(): boolean {
   return settings.theme === "dark";
 }
 
+function gridColumns(): string {
+  const tocVisible = settings.showToc && store.active() !== undefined;
+  return (tocVisible ? "220px " : "") + `${settings.splitRatio}% 4px 1fr`;
+}
+
 function updateTocVisibility(): void {
   const visible = settings.showToc && store.active() !== undefined;
   $("#toc").style.display = visible ? "block" : "none";
-  $("#workspace").classList.toggle("toc-open", visible);
+  $("#workspace").style.gridTemplateColumns = gridColumns();
 }
 
 function applySettings(rerender = true): void {
   document.body.classList.toggle("dark", isDark());
+  document.documentElement.style.colorScheme = isDark() ? "dark" : "light";
   document.documentElement.style.setProperty("--font-size", `${settings.fontSize}px`);
-  $("#workspace").style.gridTemplateColumns = `${settings.splitRatio}% 4px 1fr`;
   setHljsTheme(isDark());
-  $("#btn-theme").textContent = isDark() ? "🌙" : "☀";
-  $("#btn-lang").textContent = getLang() === "zh-CN" ? "EN" : "中";
+  $("#btn-theme").innerHTML = isDark() ? icons.moon : icons.sun;
   $("#btn-sync").classList.toggle("on", settings.syncScroll);
   $("#btn-toc").classList.toggle("on", settings.showToc);
   updateTocVisibility();
@@ -427,7 +441,7 @@ function showExportMenu(): void {
 }
 
 function showSettingsMenu(): void {
-  showMenu($("#btn-settings"), [
+  const entries: MenuEntry[] = [
     {
       label: t("restoreTabs"),
       checked: settings.restoreTabs,
@@ -436,7 +450,32 @@ function showSettingsMenu(): void {
         saveSettings(settings);
       },
     },
-  ]);
+  ];
+  showMenu($("#btn-settings"), entries);
+  // query context menu state and append the entry when running inside tauri
+  void (async () => {
+    try {
+      const registered = await invoke<boolean>("context_menu_registered");
+      if (!menuEl) return;
+      closeMenu();
+      entries.push({
+        label: registered ? t("contextMenuRemove") : t("contextMenuAdd"),
+        onClick: () => void toggleContextMenu(registered),
+      });
+      showMenu($("#btn-settings"), entries);
+    } catch {
+      // not running inside tauri
+    }
+  })();
+}
+
+async function toggleContextMenu(registered: boolean): Promise<void> {
+  try {
+    await invoke(registered ? "unregister_context_menu" : "register_context_menu");
+    window.alert(t("contextMenuDone"));
+  } catch (e) {
+    window.alert(`${t("contextMenuFailed")}${e}`);
+  }
 }
 
 /* ---- events ---- */
@@ -534,7 +573,7 @@ function wireEvents(): void {
       const rect = workspace.getBoundingClientRect();
       const ratio = ((ev.clientX - rect.left) / rect.width) * 100;
       settings.splitRatio = Math.min(80, Math.max(15, ratio));
-      workspace.style.gridTemplateColumns = `${settings.splitRatio}% 4px 1fr`;
+      workspace.style.gridTemplateColumns = gridColumns();
     };
     const onUp = () => {
       window.removeEventListener("mousemove", onMove);
