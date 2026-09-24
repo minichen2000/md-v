@@ -46,6 +46,9 @@ const dicts: Record<Lang, Record<string, string>> = {
     contextMenuRemove: "移除右键菜单",
     contextMenuDone: "操作完成",
     contextMenuFailed: "操作失败：",
+    fileChangedReload: "文件已被外部修改，是否重新加载？",
+    fileChangedConflict: "文件在磁盘上已被修改，重新加载将丢失未保存的修改。仍要重新加载吗？",
+    fileDeleted: "文件已被删除或移动：",
   },
   en: {
     untitled: "Untitled",
@@ -92,6 +95,9 @@ const dicts: Record<Lang, Record<string, string>> = {
     contextMenuRemove: "Remove context menu",
     contextMenuDone: "Done",
     contextMenuFailed: "Operation failed: ",
+    fileChangedReload: "The file was modified externally. Reload?",
+    fileChangedConflict: "The file was modified on disk. Reloading will discard your unsaved changes. Reload anyway?",
+    fileDeleted: "The file was deleted or moved: ",
   },
 };
 

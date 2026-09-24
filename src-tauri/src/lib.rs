@@ -22,6 +22,16 @@ fn write_file(path: String, content: String) -> Result<(), String> {
 }
 
 #[tauri::command]
+fn get_file_mtime(path: String) -> Result<u64, String> {
+    let meta = std::fs::metadata(&path).map_err(|e| e.to_string())?;
+    let mtime = meta.modified().map_err(|e| e.to_string())?;
+    Ok(mtime
+        .duration_since(std::time::UNIX_EPOCH)
+        .map(|d| d.as_secs())
+        .unwrap_or(0))
+}
+
+#[tauri::command]
 fn render_markdown(src: String) -> String {
     let options = Options::ENABLE_TABLES
         | Options::ENABLE_FOOTNOTES
@@ -172,6 +182,7 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             read_file,
             write_file,
+            get_file_mtime,
             render_markdown,
             take_pending_file,
             context_menu_registered,

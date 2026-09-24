@@ -1,6 +1,6 @@
 import { invoke } from "@tauri-apps/api/core";
 import { getCurrentWebview } from "@tauri-apps/api/webview";
-import { open, save } from "@tauri-apps/plugin-dialog";
+import { open, save, ask } from "@tauri-apps/plugin-dialog";
 import { loadSettings, saveSettings, type Settings } from "./settings";
 import { t, setLang, getLang } from "./i18n";
 import { TabStore, fileName, type Tab } from "./tabs";
@@ -58,8 +58,8 @@ function buildLayout(): void {
         </ul>
         <p data-i18n="welcomeDrag"></p>
       </div>
-      <aside id="toc"></aside>
       <div id="editor-pane"></div>
+      <aside id="toc"></aside>
       <div id="splitter"></div>
       <div id="preview-pane"></div>
     </div>
@@ -140,14 +140,22 @@ function isDark(): boolean {
   return settings.theme === "dark";
 }
 
+const TOC_WIDTH = 220;
+
+function tocVisible(): boolean {
+  return settings.showToc && store.active() !== undefined;
+}
+
 function gridColumns(): string {
-  const tocVisible = settings.showToc && store.active() !== undefined;
-  return (tocVisible ? "220px " : "") + `${settings.splitRatio}% 4px 1fr`;
+  if (tocVisible()) {
+    const r = (settings.splitRatio / 100).toFixed(4);
+    return `calc((100% - ${TOC_WIDTH + 4}px) * ${r}) ${TOC_WIDTH}px 4px 1fr`;
+  }
+  return `${settings.splitRatio}% 4px 1fr`;
 }
 
 function updateTocVisibility(): void {
-  const visible = settings.showToc && store.active() !== undefined;
-  $("#toc").style.display = visible ? "block" : "none";
+  $("#toc").style.display = tocVisible() ? "block" : "none";
   $("#workspace").style.gridTemplateColumns = gridColumns();
 }
 
@@ -280,6 +288,7 @@ function activateTab(id: number): void {
     showWelcome(false);
     mountEditor(tab);
     void renderActivePreview();
+    void checkExternal(tab);
   } else {
     destroyEditor();
     $("#preview-pane").innerHTML = "";
@@ -302,6 +311,8 @@ async function openFiles(paths: string[]): Promise<void> {
     try {
       const doc = await invoke<string>("read_file", { path });
       const tab = store.add(path, doc);
+      tab.mtime = await invoke<number>("get_file_mtime", { path }).catch(() => null);
+      tab.deleted = false;
       addRecent(path);
       activateTab(tab.id);
     } catch (e) {
@@ -343,6 +354,8 @@ async function saveActive(): Promise<void> {
     tab.path = path;
     tab.title = fileName(path);
     tab.dirty = false;
+    tab.deleted = false;
+    tab.mtime = await invoke<number>("get_file_mtime", { path }).catch(() => tab.mtime);
     addRecent(path);
     refreshTabBar();
     updateStatus();
@@ -382,6 +395,57 @@ function zoom(delta: number): void {
   applySettings(false);
 }
 
+/* ---- external file change detection ---- */
+
+let externalChecking = false;
+
+async function reloadTab(tab: Tab, mtime: number | null): Promise<void> {
+  try {
+    const doc = await invoke<string>("read_file", { path: tab.path });
+    tab.doc = doc;
+    tab.dirty = false;
+    tab.mtime = mtime ?? (await invoke<number>("get_file_mtime", { path: tab.path }).catch(() => tab.mtime));
+    refreshTabBar();
+    if (store.active()?.id === tab.id) {
+      mountEditor(tab);
+      void renderActivePreview();
+      updateStatus();
+    }
+  } catch (e) {
+    window.alert(`${t("openFailed")}${e}`);
+  }
+}
+
+async function checkExternal(tab: Tab): Promise<void> {
+  if (!tab.path || externalChecking) return;
+  externalChecking = true;
+  try {
+    let mtime: number;
+    try {
+      mtime = await invoke<number>("get_file_mtime", { path: tab.path });
+    } catch {
+      if (!tab.deleted) {
+        tab.deleted = true;
+        window.alert(`${t("fileDeleted")}${tab.path}`);
+      }
+      return;
+    }
+    if (tab.deleted) tab.deleted = false; // file is back
+    if (tab.mtime === null || mtime === tab.mtime) return;
+    const ok = await ask(tab.dirty ? t("fileChangedConflict") : t("fileChangedReload"), {
+      title: "md-v",
+      kind: "warning",
+    });
+    if (ok) {
+      await reloadTab(tab, mtime);
+    } else {
+      tab.mtime = mtime; // don't prompt again for this change
+    }
+  } finally {
+    externalChecking = false;
+  }
+}
+
 /* ---- sync scroll ---- */
 
 type Pane = "editor" | "preview";
@@ -413,7 +477,7 @@ function handlePaneScroll(pane: Pane): void {
 function showRecentMenu(): void {
   const recent = getRecent();
   const entries: MenuEntry[] = recent.length
-    ? recent.map((p) => ({ label: fileName(p), title: p, onClick: () => void openFiles([p]) }))
+    ? recent.map((p) => ({ label: p, title: p, onClick: () => void openFiles([p]) }))
     : [{ label: t("recentEmpty"), disabled: true }];
   entries.push("sep", {
     label: t("clearRecent"),
@@ -565,13 +629,21 @@ function wireEvents(): void {
   previewPane.addEventListener("scroll", () => handlePaneScroll("preview"));
   previewPane.addEventListener("mouseenter", () => markSource("preview"));
 
+  window.setInterval(() => {
+    if (document.visibilityState !== "visible") return;
+    const tab = store.active();
+    if (tab?.path) void checkExternal(tab);
+  }, 3000);
+
   const splitter = $("#splitter");
   splitter.addEventListener("mousedown", (e) => {
     e.preventDefault();
     const workspace = $("#workspace");
     const onMove = (ev: MouseEvent) => {
       const rect = workspace.getBoundingClientRect();
-      const ratio = ((ev.clientX - rect.left) / rect.width) * 100;
+      const tocW = tocVisible() ? TOC_WIDTH : 0;
+      const avail = rect.width - tocW - 4;
+      const ratio = ((ev.clientX - rect.left - tocW - 4) / avail) * 100;
       settings.splitRatio = Math.min(80, Math.max(15, ratio));
       workspace.style.gridTemplateColumns = gridColumns();
     };

@@ -7,6 +7,8 @@ export interface Tab {
   dirty: boolean;
   doc: string;
   scrollTop: number;
+  mtime: number | null;
+  deleted: boolean;
 }
 
 export function fileName(path: string): string {
@@ -43,6 +45,8 @@ export class TabStore {
       dirty: false,
       doc,
       scrollTop: 0,
+      mtime: null,
+      deleted: false,
     };
     this.tabs.push(tab);
     this.activeId = tab.id;

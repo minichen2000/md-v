@@ -94,6 +94,7 @@ body.dark {
   scrollbar-width: thin;
   align-items: center;
   height: 34px;
+  padding: 0 8px;
 }
 
 .tab {
@@ -158,7 +159,7 @@ body.dark {
   align-items: center;
   justify-content: flex-start;
   gap: 2px;
-  padding: 4px 6px;
+  padding: 6px 8px;
   border-bottom: 1px solid var(--border);
   flex-shrink: 0;
 }
@@ -398,12 +399,14 @@ body.dark {
   position: fixed;
   z-index: 100;
   min-width: 180px;
-  max-width: 380px;
+  width: max-content;
+  max-width: 90vw;
   background: var(--bg);
   border: 1px solid var(--border);
   border-radius: 6px;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
   padding: 4px;
+  white-space: nowrap;
 }
 
 .menu-item {
