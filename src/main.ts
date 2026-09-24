@@ -167,7 +167,6 @@ function applySettings(rerender = true): void {
   $("#btn-theme").innerHTML = isDark() ? icons.moon : icons.sun;
   const langBtn = $("#btn-lang");
   langBtn.innerHTML = `${icons.lang}<span class="lbl">${getLang() === "zh-CN" ? "中" : "EN"}</span>`;
-  langBtn.classList.add("on");
   langBtn.title = t("toggleLang");
   $("#btn-sync").classList.toggle("on", settings.syncScroll);
   $("#btn-toc").classList.toggle("on", settings.showToc);
