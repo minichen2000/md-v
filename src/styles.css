@@ -84,7 +84,6 @@ body.dark {
   background: var(--toolbar-bg);
   border-bottom: 1px solid var(--border);
   flex-shrink: 0;
-  margin-top: 6px;
 }
 
 #tabbar {
