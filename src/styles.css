@@ -181,6 +181,11 @@ body.dark {
   background: var(--border);
 }
 
+#toolbar button .lbl {
+  margin-left: 4px;
+  font-weight: 600;
+}
+
 #toolbar .sep {
   width: 1px;
   height: 18px;

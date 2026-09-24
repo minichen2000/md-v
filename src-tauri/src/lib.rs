@@ -116,6 +116,14 @@ mod context_menu {
         Ok(())
     }
 
+    fn ignore_not_found(r: std::io::Result<()>) -> Result<(), String> {
+        match r {
+            Ok(()) => Ok(()),
+            Err(e) if e.kind() == std::io::ErrorKind::NotFound => Ok(()),
+            Err(e) => Err(e.to_string()),
+        }
+    }
+
     pub fn unregister() -> Result<(), String> {
         let classes = classes()?;
         // only clear the default value when it points at our ProgID
@@ -126,11 +134,11 @@ mod context_menu {
                     .map(|v| v == PROG_ID)
                     .unwrap_or(false);
                 if ours {
-                    k.delete_value("").map_err(|e| e.to_string())?;
+                    ignore_not_found(k.delete_value(""))?;
                 }
             }
         }
-        classes.delete_subkey_all(PROG_ID).map_err(|e| e.to_string())?;
+        ignore_not_found(classes.delete_subkey_all(PROG_ID))?;
         Ok(())
     }
 }

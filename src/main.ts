@@ -39,7 +39,7 @@ function buildLayout(): void {
         <button id="btn-sync" data-i18n-title="syncScroll"></button>
         <button id="btn-toc" data-i18n-title="toc"></button>
         <button id="btn-theme" data-i18n-title="toggleTheme"></button>
-        <button id="btn-lang" data-i18n-title="toggleLang"></button>
+        <button id="btn-lang"></button>
         <span class="sep"></span>
         <button id="btn-export" data-i18n-title="export"></button>
         <button id="btn-settings" data-i18n-title="settings"></button>
@@ -165,6 +165,10 @@ function applySettings(rerender = true): void {
   document.documentElement.style.setProperty("--font-size", `${settings.fontSize}px`);
   setHljsTheme(isDark());
   $("#btn-theme").innerHTML = isDark() ? icons.moon : icons.sun;
+  const langBtn = $("#btn-lang");
+  langBtn.innerHTML = `${icons.lang}<span class="lbl">${getLang() === "zh-CN" ? "中" : "EN"}</span>`;
+  langBtn.classList.add("on");
+  langBtn.title = t("toggleLang");
   $("#btn-sync").classList.toggle("on", settings.syncScroll);
   $("#btn-toc").classList.toggle("on", settings.showToc);
   updateTocVisibility();
