@@ -90,3 +90,10 @@ npm install
 npm run tauri dev      # develop
 npm run tauri build    # portable exe + NSIS installer
 ```
+
+
+---
+
+## License
+
+[MIT](LICENSE) © 2026 minichen2000
