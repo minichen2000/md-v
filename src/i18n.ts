@@ -49,6 +49,10 @@ const dicts: Record<Lang, Record<string, string>> = {
     fileChangedReload: "文件已被外部修改，是否重新加载？",
     fileChangedConflict: "文件在磁盘上已被修改，重新加载将丢失未保存的修改。仍要重新加载吗？",
     fileDeleted: "文件已被删除或移动：",
+    about: "关于 md-v",
+    aboutDesc: "快速 Markdown 浏览器/编辑器",
+    aboutLicense: "© 2025 minichen2000 · MIT License",
+    aboutRepo: "源码仓库",
   },
   en: {
     untitled: "Untitled",
@@ -98,6 +102,10 @@ const dicts: Record<Lang, Record<string, string>> = {
     fileChangedReload: "The file was modified externally. Reload?",
     fileChangedConflict: "The file was modified on disk. Reloading will discard your unsaved changes. Reload anyway?",
     fileDeleted: "The file was deleted or moved: ",
+    about: "About md-v",
+    aboutDesc: "A fast Markdown viewer/editor",
+    aboutLicense: "© 2025 minichen2000 · MIT License",
+    aboutRepo: "Source code",
   },
 };
 

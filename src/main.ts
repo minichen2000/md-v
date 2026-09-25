@@ -1,6 +1,7 @@
 import { invoke } from "@tauri-apps/api/core";
 import { getCurrentWebview } from "@tauri-apps/api/webview";
 import { open, save, ask } from "@tauri-apps/plugin-dialog";
+import { openUrl } from "@tauri-apps/plugin-opener";
 import { loadSettings, saveSettings, type Settings } from "./settings";
 import { t, setLang, getLang } from "./i18n";
 import { TabStore, fileName, type Tab } from "./tabs";
@@ -507,6 +508,42 @@ function showExportMenu(): void {
   ]);
 }
 
+function showAbout(): void {
+  const overlay = document.createElement("div");
+  overlay.id = "about-overlay";
+  overlay.innerHTML = `
+    <div id="about-dialog">
+      <h2>md-v <span class="ver">v${__APP_VERSION__}</span></h2>
+      <p>${t("aboutDesc")}</p>
+      <p class="license">${t("aboutLicense")}</p>
+      <p class="links">
+        ${t("aboutRepo")}:
+        <a href="https://github.com/minichen2000/md-v" data-url="https://github.com/minichen2000/md-v">GitHub</a>
+        ·
+        <a href="https://gitee.com/minichen2000/md-v" data-url="https://gitee.com/minichen2000/md-v">Gitee</a>
+      </p>
+      <button id="about-close">OK</button>
+    </div>`;
+  document.body.appendChild(overlay);
+  const close = () => overlay.remove();
+  overlay.addEventListener("mousedown", (e) => {
+    if (e.target === overlay) close();
+  });
+  overlay.querySelector("#about-close")!.addEventListener("click", close);
+  overlay.querySelectorAll<HTMLAnchorElement>("a[data-url]").forEach((a) => {
+    a.addEventListener("click", (e) => {
+      e.preventDefault();
+      void openUrl(a.dataset.url!).catch(() => window.open(a.dataset.url!, "_blank"));
+    });
+  });
+  window.addEventListener("keydown", function onKey(e) {
+    if (e.key === "Escape") {
+      close();
+      window.removeEventListener("keydown", onKey);
+    }
+  });
+}
+
 function showSettingsMenu(): void {
   const entries: MenuEntry[] = [
     {
@@ -517,6 +554,8 @@ function showSettingsMenu(): void {
         saveSettings(settings);
       },
     },
+    "sep",
+    { label: t("about"), onClick: () => showAbout() },
   ];
   showMenu($("#btn-settings"), entries);
   // query context menu state and append the entry when running inside tauri
@@ -525,7 +564,7 @@ function showSettingsMenu(): void {
       const registered = await invoke<boolean>("context_menu_registered");
       if (!menuEl) return;
       closeMenu();
-      entries.push({
+      entries.splice(entries.length - 2, 0, {
         label: registered ? t("contextMenuRemove") : t("contextMenuAdd"),
         onClick: () => void toggleContextMenu(registered),
       });

@@ -529,3 +529,63 @@ body.dark {
     border: 1px solid #ccc;
   }
 }
+
+/* ---- about dialog ---- */
+#about-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+#about-dialog {
+  background: var(--bg);
+  color: var(--fg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 24px 32px;
+  min-width: 320px;
+  text-align: center;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+}
+
+#about-dialog h2 {
+  margin: 0 0 8px;
+}
+
+#about-dialog h2 .ver {
+  font-size: 13px;
+  font-weight: normal;
+  opacity: 0.7;
+}
+
+#about-dialog p {
+  margin: 6px 0;
+}
+
+#about-dialog .license {
+  opacity: 0.8;
+  font-size: 13px;
+}
+
+#about-dialog .links {
+  font-size: 13px;
+}
+
+#about-dialog .links a {
+  color: var(--accent);
+  cursor: pointer;
+}
+
+#about-dialog button {
+  margin-top: 14px;
+  padding: 5px 24px;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
