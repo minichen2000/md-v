@@ -13,9 +13,11 @@ export interface Settings {
 
 const KEY = "md-v-settings";
 
+const defaultLang: Lang = navigator.language.startsWith("zh") ? "zh-CN" : "en";
+
 const DEFAULTS: Settings = {
   theme: "light",
-  lang: "zh-CN",
+  lang: defaultLang,
   fontSize: 14,
   splitRatio: 35,
   syncScroll: true,
@@ -30,7 +32,7 @@ export function loadSettings(): Settings {
     const parsed = JSON.parse(raw) as Partial<Settings>;
     return {
       theme: parsed.theme === "dark" ? "dark" : "light",
-      lang: parsed.lang === "en" ? "en" : "zh-CN",
+      lang: parsed.lang === "zh-CN" ? "zh-CN" : "en",
       fontSize: clamp(num(parsed.fontSize, DEFAULTS.fontSize), 10, 28),
       splitRatio: clamp(num(parsed.splitRatio, DEFAULTS.splitRatio), 15, 80),
       syncScroll: bool(parsed.syncScroll, DEFAULTS.syncScroll),

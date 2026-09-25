@@ -1,96 +1,83 @@
 # md-v
 
-<p align="center"><img src="assets-src/icon.png" width="128" alt="md-v 图标"></p>
+English | [简体中文](README.zh-CN.md)
 
-**md-v** 是一个以「快」为第一目标的 Markdown 浏览/编辑器：启动快、渲染快、滚动快。
-基于 **Tauri v2**（Rust + 系统 WebView），安装包仅约 4 MB，运行内存约 40 MB，全部资源本地打包、零网络加载。
+<p align="center"><img src="assets-src/icon.png" width="128" alt="md-v icon"></p>
 
-## 特性
+**md-v** is a Markdown viewer/editor with speed as its top priority: fast startup, fast rendering, fast scrolling.
+Built on **Tauri v2** (Rust + system WebView), the installer is only ~4 MB, runtime memory is ~40 MB, and all resources are bundled locally with zero network loading.
 
-- **左编辑右渲染**：左侧 CodeMirror 6 源码编辑（语法高亮、行号、自动换行），右侧实时渲染，分栏比例可拖拽并记忆
-- **现代 Markdown 渲染**：Rust 侧 pulldown-cmark 解析 GFM（表格/任务列表/删除线/脚注），highlight.js 代码高亮，KaTeX 数学公式，Mermaid 图表（懒加载，不含图表的文档零开销）
-- **多 Tab**：同时打开多个文件，未保存显示 ●，支持拖拽打开
-- **同步滚动**：编辑区与预览区比例联动，可开关
-- **大纲 TOC**：h1~h4 目录侧栏，点击跳转、滚动高亮当前章节
-- **导出**：一键导出独立 HTML（内联样式与字体，离线可开）/ PDF（系统打印）
-- **个性化**：浅/暗主题、字体缩放（Ctrl+滚轮）、中文/English 界面，设置自动持久化
-- **系统集成**：`.md` 文件关联与资源管理器右键「Open with md-v」（应用内一键注册/移除，免管理员）
-- **文件守护**：磁盘文件被外部修改时提示重新加载，避免覆盖丢失
+## Features
 
-## 快捷键
+- **Edit left, render right**: CodeMirror 6 source editor on the left (syntax highlighting, line numbers, word wrap), live rendering on the right, with a draggable split ratio that is remembered
+- **Modern Markdown rendering**: pulldown-cmark parses GFM (tables / task lists / strikethrough / footnotes) on the Rust side, highlight.js for code highlighting, KaTeX for math, Mermaid for diagrams (lazy-loaded — zero overhead for documents without diagrams)
+- **Multi-tab**: open multiple files at once, unsaved tabs show ●, drag-and-drop to open files
+- **Synchronized scrolling**: proportional scroll sync between editor and preview, toggleable
+- **Outline TOC**: h1–h4 sidebar with click-to-jump and scroll-highlighted current section
+- **Export**: one-click export to standalone HTML (inlined styles and fonts, works offline) / PDF (system print)
+- **Personalization**: light/dark themes, font zoom (Ctrl+wheel), Chinese/English UI, settings persisted automatically
+- **System integration**: `.md` file association and Explorer context menu "Open with md-v" (one-click register/remove inside the app, no admin rights required)
+- **File guard**: prompts to reload when the file on disk is modified externally, preventing accidental overwrites
 
-| 快捷键 | 功能 |
+## Keyboard Shortcuts
+
+| Shortcut | Action |
 |---|---|
-| Ctrl + O | 打开文件 |
-| Ctrl + S | 保存 |
-| Ctrl + T | 新建 Tab |
-| Ctrl + W | 关闭当前 Tab |
-| Ctrl + 滚轮 | 缩放字体 |
+| Ctrl + O | Open file |
+| Ctrl + S | Save |
+| Ctrl + T | New tab |
+| Ctrl + W | Close current tab |
+| Ctrl + Wheel | Zoom font |
 
-## 安装与使用
+## Install & Usage
 
-两种使用方式（任选其一）：
+Two ways to use it (pick one):
 
-- **绿色版**：直接运行 `md-v.exe`，然后在应用内 ⚙ 菜单点「添加右键菜单」即可注册文件关联（写 HKCU，免管理员，可随时移除）
-- **安装包**：运行 `md-v_x.x.x_x64-setup.exe`，自动注册文件关联、创建开始菜单项，支持系统级卸载
+- **Portable**: run `md-v.exe` directly, then click "Add context menu" in the in-app ⚙ menu to register the file association (writes to HKCU, no admin rights required, removable at any time)
+- **Installer**: run `md-v_x.x.x_x64-setup.exe` — automatically registers file associations, creates Start Menu entries, and supports system-level uninstall
 
-## 构建
+## Build
 
-详见 **[BUILDING.md](BUILDING.md)**（含国内网络加速的踩坑记录）。简要：
+See **[BUILDING.md](BUILDING.md)** (includes notes on network acceleration in mainland China). In short:
 
 ```bash
 npm install
-npm run tauri dev      # 开发调试
-npm run tauri build    # 产出绿色版 exe + NSIS 安装包
+npm run tauri dev      # develop with hot reload
+npm run tauri build    # produces portable exe + NSIS installer
 ```
 
-## 技术栈
+## Tech Stack
 
-| 层 | 技术 |
+| Layer | Technology |
 |---|---|
-| 应用框架 | Tauri v2（Rust + WebView2） |
-| Markdown 解析 | pulldown-cmark（Rust 侧，GFM 全开） |
-| 源码编辑器 | CodeMirror 6 |
-| 渲染增强 | highlight.js / KaTeX / Mermaid（懒加载） |
-| 前端 | Vite + vanilla TypeScript（无框架） |
+| App framework | Tauri v2 (Rust + WebView2) |
+| Markdown parsing | pulldown-cmark (Rust side, full GFM) |
+| Source editor | CodeMirror 6 |
+| Rendering extras | highlight.js / KaTeX / Mermaid (lazy-loaded) |
+| Frontend | Vite + vanilla TypeScript (no framework) |
 
-## 目录结构
+## Directory Structure
 
 ```
 md-v/
-├── src/                  # 前端（TypeScript）
-│   ├── main.ts           # 入口：布局、Tab 生命周期、快捷键、菜单
-│   ├── editor.ts         # CodeMirror 6 编辑器封装
-│   ├── preview.ts        # 渲染管线：HTML 注入 → hljs → KaTeX → Mermaid
-│   ├── toc.ts            # 大纲目录
-│   ├── tabs.ts           # Tab 状态管理
-│   ├── recent.ts         # 最近文件
-│   ├── export.ts         # 导出 HTML/PDF
-│   ├── settings.ts       # 设置持久化（localStorage）
-│   ├── i18n.ts           # 中英文案
-│   └── icons.ts          # 线条 SVG 图标集
-├── src-tauri/            # Rust 后端
-│   ├── src/lib.rs        # 命令：文件读写、渲染、注册表、mtime
-│   └── icons/            # 应用图标（tauri icon 生成）
-├── assets-src/           # 图标源文件（SVG → PNG）
-├── scripts/              # 图标生成脚本、免安装注册表脚本
-└── test-fixtures/        # 测试文档（全特性 + 2MB 大文件）
+├── src/                  # Frontend (TypeScript)
+│   ├── main.ts           # Entry: layout, tab lifecycle, shortcuts, menus
+│   ├── editor.ts         # CodeMirror 6 editor wrapper
+│   ├── preview.ts        # Render pipeline: HTML injection → hljs → KaTeX → Mermaid
+│   ├── toc.ts            # Outline TOC
+│   ├── tabs.ts           # Tab state management
+│   ├── recent.ts         # Recent files
+│   ├── export.ts         # HTML/PDF export
+│   ├── settings.ts       # Settings persistence (localStorage)
+│   ├── i18n.ts           # Chinese/English UI strings
+│   └── icons.ts          # Line-style SVG icon set
+├── src-tauri/            # Rust backend
+│   ├── src/lib.rs        # Commands: file I/O, rendering, registry, mtime
+│   └── icons/            # App icons (generated by tauri icon)
+├── assets-src/           # Icon source files (SVG → PNG)
+├── scripts/              # Icon generation script, install-free registry script
+└── test-fixtures/        # Test documents (full-featured + 2 MB large file)
 ```
-
----
-
-## English
-
-**md-v** — a speed-first Markdown viewer/editor built with Tauri v2 (Rust + system WebView). ~4 MB installer, ~40 MB RAM, fully offline.
-
-Features: split view (CodeMirror 6 source editor + live preview), GFM tables/task lists, syntax highlighting, KaTeX math, Mermaid diagrams (lazy-loaded), multi-tab, synchronized scrolling, TOC sidebar, recent files, HTML/PDF export, light/dark themes, Chinese/English UI, Explorer context-menu integration, external-change detection.
-
-```bash
-npm install
-npm run tauri dev      # develop
-npm run tauri build    # portable exe + NSIS installer
-```
-
 
 ---
 

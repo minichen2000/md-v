@@ -1,51 +1,53 @@
-# 构建说明
+# Build Guide
 
-本文档描述如何从源码构建 md-v，包含国内网络环境下的实测踩坑记录。
+English | [简体中文](BUILDING.zh-CN.md)
 
-## 环境要求
+This document describes how to build md-v from source, including tested workarounds for network issues in mainland China.
 
-| 依赖 | 版本 | 说明 |
+## Requirements
+
+| Dependency | Version | Notes |
 |---|---|---|
-| Node.js | ≥ 20，推荐 24 LTS | 前端构建（Vite）。低于 18 无法运行现代工具链 |
-| Rust | stable（rustup 安装） | 后端与打包。安装：https://rustup.rs |
-| Visual Studio C++ Build Tools | 2019+ | MSVC 链接器，Rust MSVC toolchain 必需。安装时勾选「使用 C++ 的桌面开发」 |
-| WebView2 | Windows 10/11 一般已内置 | 缺失时运行 NSIS 安装包会自动引导安装；或手动装 [WebView2 Runtime](https://developer.microsoft.com/microsoft-edge/webview2) |
+| Node.js | ≥ 20, 24 LTS recommended | Frontend build (Vite). Modern toolchains won't run below 18 |
+| Rust | stable (via rustup) | Backend and packaging. Install: https://rustup.rs |
+| Visual Studio C++ Build Tools | 2019+ | MSVC linker, required by the Rust MSVC toolchain. Check "Desktop development with C++" during installation |
+| WebView2 | Usually built into Windows 10/11 | If missing, the NSIS installer will bootstrap it automatically; or install the [WebView2 Runtime](https://developer.microsoft.com/microsoft-edge/webview2) manually |
 
-## 构建步骤
+## Build Steps
 
 ```bash
-# 1. 安装前端依赖
+# 1. Install frontend dependencies
 npm install
 
-# 2. 开发调试（热更新）
+# 2. Develop with hot reload
 npm run tauri dev
 
-# 3. 类型检查 + 前端构建（快速验证）
+# 3. Type check + frontend build (quick verification)
 npm run build
 cd src-tauri && cargo check
 
-# 4. 发布构建
+# 4. Release build
 npm run tauri build
 ```
 
-产物：
+Artifacts:
 
-| 产物 | 路径 | 用途 |
+| Artifact | Path | Purpose |
 |---|---|---|
-| 绿色版主程序 | `src-tauri/target/release/md-v.exe` | 双击即用，日常分发 |
-| NSIS 安装包 | `src-tauri/target/release/bundle/nsis/md-v_x.x.x_x64-setup.exe` | 安装/卸载、自动注册文件关联 |
+| Portable executable | `src-tauri/target/release/md-v.exe` | Double-click to run; for everyday distribution |
+| NSIS installer | `src-tauri/target/release/bundle/nsis/md-v_x.x.x_x64-setup.exe` | Install/uninstall, auto-registers file associations |
 
-## 国内网络加速（踩坑记录）
+## Network Acceleration in Mainland China (Lessons Learned)
 
-### crates.io 拉取超时
+### crates.io fetch timeouts
 
-项目已内置 rsproxy 镜像：`src-tauri/.cargo/config.toml`，仅对本项目生效，开箱即用。
+The project ships with the rsproxy mirror built in: `src-tauri/.cargo/config.toml`. It applies only to this project and works out of the box.
 
-### NSIS 工具链下载卡死（重点）
+### NSIS toolchain download hangs (important)
 
-`tauri build` 编译完成后，还需从 GitHub Releases 下载 NSIS 打包工具（`nsis-3.11.zip`、`nsis_tauri_utils.dll`）。国内直连 GitHub 经常**无任何输出地卡死**（现象：编译已完成、没有 rustc 进程、构建看似挂起）。
+After `tauri build` finishes compiling, it still needs to download the NSIS packaging tools (`nsis-3.11.zip`, `nsis_tauri_utils.dll`) from GitHub Releases. Direct connections to GitHub from mainland China often **hang with no output at all** (symptom: compilation has finished, no rustc process is running, and the build appears stuck).
 
-解决：设置 bundler 镜像环境变量后再构建：
+Fix: set the bundler mirror environment variable before building:
 
 ```bash
 # Git Bash
@@ -57,35 +59,35 @@ TAURI_BUNDLER_TOOLS_GITHUB_MIRROR=https://ghfast.top/ npm run tauri build
 $env:TAURI_BUNDLER_TOOLS_GITHUB_MIRROR="https://ghfast.top/"; npm run tauri build
 ```
 
-镜像只需成功下载一次，之后有本地缓存，构建约 3 分钟即可完成。
+The mirror only needs to succeed once; afterwards there is a local cache, and the build completes in about 3 minutes.
 
-## 图标再生成
+## Regenerating Icons
 
-图标源文件为 `assets-src/icon.svg`，修改后重新生成全套图标：
+The icon source is `assets-src/icon.svg`. After modifying it, regenerate the full icon set:
 
 ```bash
-node scripts/make-icon.mjs        # SVG → 1024px PNG（@resvg/resvg-js）
-npx tauri icon assets-src/icon.png  # 生成 ico/icns/各尺寸 png 到 src-tauri/icons/
+node scripts/make-icon.mjs        # SVG → 1024px PNG (@resvg/resvg-js)
+npx tauri icon assets-src/icon.png  # generates ico/icns/pngs of all sizes into src-tauri/icons/
 ```
 
-## 免安装注册右键菜单
+## Registering the Context Menu Without Installing
 
-绿色版用户也可不用应用内注册，改用注册表脚本：
+Portable-version users can also skip in-app registration and use a registry script instead:
 
-1. 编辑 `scripts/register-md-v.reg`，把 3 处 `C:\\Path\\To\\md-v.exe` 替换为 exe 实际路径（注意双反斜杠）
-2. 双击导入（写 HKCU，免管理员）
-3. 卸载：删除 `HKCU\Software\Classes\.md`、`.markdown` 的默认值与 `HKCU\Software\Classes\md-v.md` 整键
+1. Edit `scripts/register-md-v.reg`, replacing the 3 occurrences of `C:\\Path\\To\\md-v.exe` with the actual exe path (note the double backslashes)
+2. Double-click to import (writes to HKCU, no admin rights required)
+3. To uninstall: delete the default values of `HKCU\Software\Classes\.md` and `.markdown`, and the entire `HKCU\Software\Classes\md-v.md` key
 
-> 推荐方式仍是应用内 ⚙ →「添加右键菜单」，exe 移动后重新点一次即可自愈。
+> The recommended approach is still the in-app ⚙ → "Add context menu" — if the exe is moved, clicking it once more self-heals the registration.
 
-## 测试夹具
+## Test Fixtures
 
-- `test-fixtures/full-featured.md`：覆盖 GFM 表格/任务列表/代码高亮/KaTeX/Mermaid/脚注，用于渲染回归验证
-- `test-fixtures/large.md`：约 2 MB、2000 章节，用于大文件打开与滚动性能验证
+- `test-fixtures/full-featured.md`: covers GFM tables / task lists / code highlighting / KaTeX / Mermaid / footnotes, for render regression testing
+- `test-fixtures/large.md`: ~2 MB, 2000 sections, for verifying large-file open and scroll performance
 
-## 版本号规范
+## Version Bumping
 
-发布前需三处同步 bump：
+Before a release, bump the version in all three places:
 
 - `package.json` → `version`
 - `src-tauri/tauri.conf.json` → `version`
