@@ -49,6 +49,36 @@ async function inlineFontUrls(css: string): Promise<string> {
   return css;
 }
 
+function imgMime(src: string): string {
+  const m = /\.(\w+)(?:[?#]|$)/i.exec(src);
+  const ext = (m?.[1] ?? "").toLowerCase();
+  switch (ext) {
+    case "png": return "image/png";
+    case "jpg":
+    case "jpeg": return "image/jpeg";
+    case "gif": return "image/gif";
+    case "webp": return "image/webp";
+    case "svg": return "image/svg+xml";
+    case "ico": return "image/x-icon";
+    case "bmp": return "image/bmp";
+    default: return "application/octet-stream";
+  }
+}
+
+// embed local (asset-protocol) images as data URIs so the exported file is self-contained
+async function inlineImages(root: HTMLElement): Promise<void> {
+  for (const img of Array.from(root.querySelectorAll("img"))) {
+    const src = img.getAttribute("src") ?? "";
+    if (!src.startsWith("asset:") && !src.includes("asset.localhost")) continue;
+    try {
+      const buf = await (await fetch(src)).arrayBuffer();
+      img.src = `data:${imgMime(src)};base64,${toBase64(buf)}`;
+    } catch {
+      // keep the original src if the image cannot be fetched
+    }
+  }
+}
+
 function escapeHtml(s: string): string {
   return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
@@ -67,6 +97,8 @@ export async function exportHtml(
   if (!path) return;
 
   const css = await inlineFontUrls(collectAppCss() + getHljsCss(dark));
+  const body = previewEl.cloneNode(true) as HTMLElement;
+  await inlineImages(body);
   const html = [
     "<!doctype html>",
     `<html lang="${document.documentElement.lang}">`,
@@ -77,7 +109,7 @@ export async function exportHtml(
     `<style>:root{--font-size:${fontSize}px}#preview-pane{max-width:900px;margin:0 auto;overflow:visible}</style>`,
     "</head>",
     `<body class="${dark ? "dark" : ""}">`,
-    `<div id="preview-pane">${previewEl.innerHTML}</div>`,
+    `<div id="preview-pane">${body.innerHTML}</div>`,
     "</body></html>",
   ].join("\n");
 

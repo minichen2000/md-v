@@ -1,4 +1,4 @@
-import { invoke } from "@tauri-apps/api/core";
+import { invoke, convertFileSrc } from "@tauri-apps/api/core";
 import hljs from "highlight.js/lib/common";
 import hlLightCss from "highlight.js/styles/github.css?inline";
 import hlDarkCss from "highlight.js/styles/github-dark.css?inline";
@@ -22,7 +22,33 @@ export function getHljsCss(dark: boolean): string {
   return dark ? hlDarkCss : hlLightCss;
 }
 
-export async function renderPreview(container: HTMLElement, src: string, dark: boolean): Promise<void> {
+// join a relative img src onto the markdown file's directory
+function resolveRel(baseFile: string, rel: string): string {
+  const sep = baseFile.includes("\\") ? "\\" : "/";
+  const baseDir = baseFile.slice(0, Math.max(baseFile.lastIndexOf("\\"), baseFile.lastIndexOf("/")));
+  const parts = (baseDir + sep + rel.replace(/\//g, sep)).split(/[\\/]+/);
+  const out: string[] = [];
+  for (const p of parts) {
+    if (p === "" || p === ".") continue;
+    if (p === "..") {
+      out.pop();
+      continue;
+    }
+    out.push(p);
+  }
+  return out.join(sep);
+}
+
+function rewriteImages(container: HTMLElement, basePath?: string): void {
+  if (!basePath) return;
+  container.querySelectorAll("img").forEach((img) => {
+    const src = img.getAttribute("src");
+    if (!src || /^(https?:|data:|blob:|asset:)/i.test(src)) return;
+    img.src = convertFileSrc(resolveRel(basePath, src));
+  });
+}
+
+export async function renderPreview(container: HTMLElement, src: string, dark: boolean, basePath?: string): Promise<void> {
   let html: string;
   try {
     html = await invoke<string>("render_markdown", { src });
@@ -30,6 +56,7 @@ export async function renderPreview(container: HTMLElement, src: string, dark: b
     return;
   }
   container.innerHTML = html;
+  rewriteImages(container, basePath);
 
   container.querySelectorAll<HTMLElement>("pre code").forEach((code) => {
     if (code.className.includes("language-mermaid")) return;

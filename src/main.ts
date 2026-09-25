@@ -218,7 +218,7 @@ function schedulePreview(tab: Tab): void {
 async function renderActivePreview(): Promise<void> {
   const tab = store.active();
   if (!tab) return;
-  await renderPreview($("#preview-pane"), tab.doc, isDark());
+  await renderPreview($("#preview-pane"), tab.doc, isDark(), tab.path ?? undefined);
   toc.rebuild();
 }
 
