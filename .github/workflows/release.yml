@@ -50,21 +50,21 @@ jobs:
         run: |
           $tag = "${{ github.ref_name }}"
           $name = "md-v-$tag-${{ matrix.asset_name }}"
-          New-Item -ItemType Directory -Path "dist/$name" | Out-Null
-          Copy-Item "src-tauri/target/release/${{ matrix.artifact }}" "dist/$name/"
-          Compress-Archive -Path "dist/$name" -DestinationPath "dist/$name.zip"
+          New-Item -ItemType Directory -Path "release-out/$name" | Out-Null
+          Copy-Item "src-tauri/target/release/${{ matrix.artifact }}" "release-out/$name/"
+          Compress-Archive -Path "release-out/$name" -DestinationPath "release-out/$name.zip"
 
       - name: Package (Unix)
         if: runner.os != 'Windows'
         run: |
           tag="${GITHUB_REF_NAME}"
           name="md-v-${tag}-${{ matrix.asset_name }}"
-          mkdir -p "dist/${name}"
-          cp "src-tauri/target/release/${{ matrix.artifact }}" "dist/${name}/"
-          tar -czf "dist/${name}.tar.gz" -C dist "${name}"
+          mkdir -p "release-out/${name}"
+          cp "src-tauri/target/release/${{ matrix.artifact }}" "release-out/${name}/"
+          tar -czf "release-out/${name}.tar.gz" -C release-out "${name}"
 
       - name: Upload release assets
         uses: softprops/action-gh-release@v2
         with:
-          files: dist/*
+          files: release-out/*
           generate_release_notes: true
