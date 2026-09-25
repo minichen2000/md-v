@@ -2023,7 +2023,7 @@ dependencies = [
 
 [[package]]
 name = "md-v"
-version = "0.4.0"
+version = "0.4.1"
 dependencies = [
  "pulldown-cmark",
  "serde",

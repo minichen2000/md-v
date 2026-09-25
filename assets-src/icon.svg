@@ -27,8 +27,8 @@
         font-size="470" font-weight="800" letter-spacing="-14"
         fill="#ffffff">MD</text>
 
-  <!-- lightning badge, bottom-right: md-v opens markdown fast -->
-  <circle cx="806" cy="806" r="128" fill="url(#badge)"/>
-  <polygon points="856,706 774,806 822,806 758,906 838,812 790,812"
-           fill="#2b3a8f"/>
+  <!-- bold lightning bolt, bottom-right: md-v opens markdown fast.
+       kept large/high-contrast so it stays readable at small icon sizes -->
+  <polygon points="895,640 720,795 810,795 695,965 895,818 795,818"
+           fill="#ffffff"/>
 </svg>
