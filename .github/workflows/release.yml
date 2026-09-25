@@ -1,0 +1,70 @@
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            artifact: md-v.exe
+            asset_name: windows-x86_64
+          - os: macos-latest
+            artifact: md-v
+            asset_name: macos-aarch64
+          - os: ubuntu-latest
+            artifact: md-v
+            asset_name: linux-x86_64
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - name: Install Tauri system dependencies (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libgtk-3-dev libayatana-appindicator3-dev librsvg2-dev
+
+      - name: Build
+        run: npm run tauri build -- --no-bundle
+
+      - name: Package (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $tag = "${{ github.ref_name }}"
+          $name = "md-v-$tag-${{ matrix.asset_name }}"
+          New-Item -ItemType Directory -Path "dist/$name" | Out-Null
+          Copy-Item "src-tauri/target/release/${{ matrix.artifact }}" "dist/$name/"
+          Compress-Archive -Path "dist/$name" -DestinationPath "dist/$name.zip"
+
+      - name: Package (Unix)
+        if: runner.os != 'Windows'
+        run: |
+          tag="${GITHUB_REF_NAME}"
+          name="md-v-${tag}-${{ matrix.asset_name }}"
+          mkdir -p "dist/${name}"
+          cp "src-tauri/target/release/${{ matrix.artifact }}" "dist/${name}/"
+          tar -czf "dist/${name}.tar.gz" -C dist "${name}"
+
+      - name: Upload release assets
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/*
+          generate_release_notes: true

@@ -1,6 +1,6 @@
 [package]
 name = "md-v"
-version = "0.4.1"
+version = "0.4.2"
 description = "A fast Markdown viewer/editor"
 authors = ["minichen2000"]
 edition = "2021"
