@@ -106,7 +106,7 @@ export async function exportHtml(
     '<meta charset="utf-8" />',
     `<title>${escapeHtml(title)}</title>`,
     `<style>${css}</style>`,
-    `<style>:root{--font-size:${fontSize}px}#preview-pane{max-width:900px;margin:0 auto;overflow:visible}</style>`,
+    `<style>:root{--font-size:${fontSize}px}html,body{height:auto;overflow:visible}#preview-pane{max-width:900px;margin:0 auto;overflow:visible}</style>`,
     "</head>",
     `<body class="${dark ? "dark" : ""}">`,
     `<div id="preview-pane">${body.innerHTML}</div>`,

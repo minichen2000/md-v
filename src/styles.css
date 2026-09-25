@@ -488,6 +488,12 @@ body.dark {
 /* ---- print (export PDF) ---- */
 
 @media print {
+  html,
+  body {
+    height: auto;
+    overflow: visible;
+  }
+
   body,
   body.dark {
     --bg: #ffffff;
