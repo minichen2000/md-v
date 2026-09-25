@@ -27,10 +27,8 @@
         font-size="470" font-weight="800" letter-spacing="-14"
         fill="#ffffff">MD</text>
 
-  <!-- markdown arrow badge, bottom-right -->
+  <!-- lightning badge, bottom-right: md-v opens markdown fast -->
   <circle cx="806" cy="806" r="128" fill="url(#badge)"/>
-  <text x="806" y="884" text-anchor="middle"
-        font-family="Segoe UI, Arial, Helvetica, sans-serif"
-        font-size="205" font-weight="800"
-        fill="#2b3a8f">&#8595;</text>
+  <polygon points="856,706 774,806 822,806 758,906 838,812 790,812"
+           fill="#2b3a8f"/>
 </svg>

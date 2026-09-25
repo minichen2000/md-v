@@ -2017,7 +2017,7 @@ dependencies = [
 
 [[package]]
 name = "md-v"
-version = "0.3.8"
+version = "0.3.9"
 dependencies = [
  "pulldown-cmark",
  "serde",
