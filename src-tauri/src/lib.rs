@@ -187,6 +187,19 @@ fn first_file_arg() -> Option<String> {
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
+        .plugin(tauri_plugin_single_instance::init(|app, argv, _cwd| {
+            use tauri::{Emitter, Manager};
+            let files: Vec<String> = argv
+                .into_iter()
+                .skip(1)
+                .filter(|a| std::path::Path::new(a).is_file())
+                .collect();
+            if let Some(w) = app.get_webview_window("main") {
+                let _ = w.unminimize();
+                let _ = w.set_focus();
+            }
+            let _ = app.emit("open-files", files);
+        }))
         .manage(PendingFile(Mutex::new(first_file_arg())))
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_dialog::init())

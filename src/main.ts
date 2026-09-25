@@ -1,5 +1,6 @@
 import { invoke } from "@tauri-apps/api/core";
 import { getCurrentWebview } from "@tauri-apps/api/webview";
+import { listen } from "@tauri-apps/api/event";
 import { open, save, ask } from "@tauri-apps/plugin-dialog";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import { loadSettings, saveSettings, type Settings } from "./settings";
@@ -707,6 +708,9 @@ async function main(): Promise<void> {
   applySettings(false);
   showWelcome(true);
   updateStatus();
+
+  // single-instance: a second launch forwards its file args here
+  void listen<string[]>("open-files", (e) => void openFiles(e.payload)).catch(() => {});
 
   try {
     const pending = await invoke<string | null>("take_pending_file");
