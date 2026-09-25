@@ -49,10 +49,8 @@ jobs:
         shell: pwsh
         run: |
           $tag = "${{ github.ref_name }}"
-          $name = "md-v-$tag-${{ matrix.asset_name }}"
-          New-Item -ItemType Directory -Path "release-out/$name" | Out-Null
-          Copy-Item "src-tauri/target/release/${{ matrix.artifact }}" "release-out/$name/"
-          Compress-Archive -Path "release-out/$name" -DestinationPath "release-out/$name.zip"
+          New-Item -ItemType Directory -Path "release-out" | Out-Null
+          Copy-Item "src-tauri/target/release/${{ matrix.artifact }}" "release-out/md-v-$tag-${{ matrix.asset_name }}.exe"
 
       - name: Package (Unix)
         if: runner.os != 'Windows'

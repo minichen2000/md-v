@@ -11,7 +11,7 @@ This document describes how to build md-v from source, including tested workarou
 | Node.js | ≥ 20, 24 LTS recommended | Frontend build (Vite). Modern toolchains won't run below 18 |
 | Rust | stable (via rustup) | Backend and packaging. Install: https://rustup.rs |
 | Visual Studio C++ Build Tools | 2019+ | MSVC linker, required by the Rust MSVC toolchain. Check "Desktop development with C++" during installation |
-| WebView2 | Usually built into Windows 10/11 | If missing, the NSIS installer will bootstrap it automatically; or install the [WebView2 Runtime](https://developer.microsoft.com/microsoft-edge/webview2) manually |
+| WebView2 | Usually built into Windows 10/11 | If missing, install the [WebView2 Runtime](https://developer.microsoft.com/microsoft-edge/webview2) manually |
 
 ## Build Steps
 
@@ -26,40 +26,21 @@ npm run tauri dev
 npm run build
 cd src-tauri && cargo check
 
-# 4. Release build
-npm run tauri build
+# 4. Release build (no bundling — portable exe only)
+npm run tauri build -- --no-bundle
 ```
 
 Artifacts:
 
 | Artifact | Path | Purpose |
 |---|---|---|
-| Portable executable | `src-tauri/target/release/md-v.exe` | Double-click to run; for everyday distribution |
-| NSIS installer | `src-tauri/target/release/bundle/nsis/md-v_x.x.x_x64-setup.exe` | Install/uninstall, auto-registers file associations |
+| Portable executable | `src-tauri/target/release/md-v.exe` | Double-click to run; the only distributed artifact |
 
 ## Network Acceleration in Mainland China (Lessons Learned)
 
 ### crates.io fetch timeouts
 
 The project ships with the rsproxy mirror built in: `src-tauri/.cargo/config.toml`. It applies only to this project and works out of the box.
-
-### NSIS toolchain download hangs (important)
-
-After `tauri build` finishes compiling, it still needs to download the NSIS packaging tools (`nsis-3.11.zip`, `nsis_tauri_utils.dll`) from GitHub Releases. Direct connections to GitHub from mainland China often **hang with no output at all** (symptom: compilation has finished, no rustc process is running, and the build appears stuck).
-
-Fix: set the bundler mirror environment variable before building:
-
-```bash
-# Git Bash
-TAURI_BUNDLER_TOOLS_GITHUB_MIRROR=https://ghfast.top/ npm run tauri build
-```
-
-```powershell
-# PowerShell
-$env:TAURI_BUNDLER_TOOLS_GITHUB_MIRROR="https://ghfast.top/"; npm run tauri build
-```
-
-The mirror only needs to succeed once; afterwards there is a local cache, and the build completes in about 3 minutes.
 
 ## Regenerating Icons
 

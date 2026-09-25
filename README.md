@@ -5,7 +5,7 @@ English | [简体中文](README.zh-CN.md)
 <p align="center"><img src="assets-src/icon.png" width="128" alt="md-v icon"></p>
 
 **md-v** is a Markdown viewer/editor with speed as its top priority: fast startup, fast rendering, fast scrolling.
-Built on **Tauri v2** (Rust + system WebView), the installer is only ~4 MB, runtime memory is ~40 MB, and all resources are bundled locally with zero network loading.
+Built on **Tauri v2** (Rust + system WebView), the single portable exe is only ~4 MB, runtime memory is ~40 MB, and all resources are bundled locally with zero network loading.
 
 ## Features
 
@@ -31,10 +31,12 @@ Built on **Tauri v2** (Rust + system WebView), the installer is only ~4 MB, runt
 
 ## Install & Usage
 
-Two ways to use it (pick one):
+Download from [GitHub Releases](../../releases):
 
-- **Portable**: run `md-v.exe` directly, then click "Add context menu" in the in-app ⚙ menu to register the file association (writes to HKCU, no admin rights required, removable at any time)
-- **Installer**: run `md-v_x.x.x_x64-setup.exe` — automatically registers file associations, creates Start Menu entries, and supports system-level uninstall
+- **Windows**: grab `md-v-vX.Y.Z-windows-x86_64.exe` — a portable single file, drop it anywhere and double-click. On first run Windows may show a blue "Windows protected your PC" (Microsoft Defender SmartScreen) dialog: this is normal for small open-source projects without a commercial code-signing certificate, not a virus warning. Click **"More info" → "Run anyway"** (only needed once).
+- **macOS / Linux**: download the `.tar.gz`, extract it, `chmod +x` the binary and run it. On macOS, if the system refuses to open it, run `xattr -d com.apple.quarantine <binary>` once.
+
+Run `md-v.exe` directly, then click "Add context menu" in the in-app ⚙ menu to register the file association (writes to HKCU, no admin rights required, removable at any time).
 
 ## Build
 
@@ -43,7 +45,7 @@ See **[BUILDING.md](BUILDING.md)** (includes notes on network acceleration in ma
 ```bash
 npm install
 npm run tauri dev      # develop with hot reload
-npm run tauri build    # produces portable exe + NSIS installer
+npm run tauri build -- --no-bundle    # produces the portable exe
 ```
 
 ## Tech Stack

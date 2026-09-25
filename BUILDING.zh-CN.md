@@ -11,7 +11,7 @@
 | Node.js | ≥ 20，推荐 24 LTS | 前端构建（Vite）。低于 18 无法运行现代工具链 |
 | Rust | stable（rustup 安装） | 后端与打包。安装：https://rustup.rs |
 | Visual Studio C++ Build Tools | 2019+ | MSVC 链接器，Rust MSVC toolchain 必需。安装时勾选「使用 C++ 的桌面开发」 |
-| WebView2 | Windows 10/11 一般已内置 | 缺失时运行 NSIS 安装包会自动引导安装；或手动装 [WebView2 Runtime](https://developer.microsoft.com/microsoft-edge/webview2) |
+| WebView2 | Windows 10/11 一般已内置 | 缺失时手动安装 [WebView2 Runtime](https://developer.microsoft.com/microsoft-edge/webview2) |
 
 ## 构建步骤
 
@@ -26,40 +26,21 @@ npm run tauri dev
 npm run build
 cd src-tauri && cargo check
 
-# 4. 发布构建
-npm run tauri build
+# 4. 发布构建（不打 bundle，只产绿色版 exe）
+npm run tauri build -- --no-bundle
 ```
 
 产物：
 
 | 产物 | 路径 | 用途 |
 |---|---|---|
-| 绿色版主程序 | `src-tauri/target/release/md-v.exe` | 双击即用，日常分发 |
-| NSIS 安装包 | `src-tauri/target/release/bundle/nsis/md-v_x.x.x_x64-setup.exe` | 安装/卸载、自动注册文件关联 |
+| 绿色版主程序 | `src-tauri/target/release/md-v.exe` | 双击即用，唯一分发的产物 |
 
 ## 国内网络加速（踩坑记录）
 
 ### crates.io 拉取超时
 
 项目已内置 rsproxy 镜像：`src-tauri/.cargo/config.toml`，仅对本项目生效，开箱即用。
-
-### NSIS 工具链下载卡死（重点）
-
-`tauri build` 编译完成后，还需从 GitHub Releases 下载 NSIS 打包工具（`nsis-3.11.zip`、`nsis_tauri_utils.dll`）。国内直连 GitHub 经常**无任何输出地卡死**（现象：编译已完成、没有 rustc 进程、构建看似挂起）。
-
-解决：设置 bundler 镜像环境变量后再构建：
-
-```bash
-# Git Bash
-TAURI_BUNDLER_TOOLS_GITHUB_MIRROR=https://ghfast.top/ npm run tauri build
-```
-
-```powershell
-# PowerShell
-$env:TAURI_BUNDLER_TOOLS_GITHUB_MIRROR="https://ghfast.top/"; npm run tauri build
-```
-
-镜像只需成功下载一次，之后有本地缓存，构建约 3 分钟即可完成。
 
 ## 图标再生成
 

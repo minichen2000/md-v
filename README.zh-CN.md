@@ -5,7 +5,7 @@
 <p align="center"><img src="assets-src/icon.png" width="128" alt="md-v 图标"></p>
 
 **md-v** 是一个以「快」为第一目标的 Markdown 浏览/编辑器：启动快、渲染快、滚动快。
-基于 **Tauri v2**（Rust + 系统 WebView），安装包仅约 4 MB，运行内存约 40 MB，全部资源本地打包、零网络加载。
+基于 **Tauri v2**（Rust + 系统 WebView），单文件 exe 仅约 4 MB，运行内存约 40 MB，全部资源本地打包、零网络加载。
 
 ## 特性
 
@@ -31,10 +31,12 @@
 
 ## 安装与使用
 
-两种使用方式（任选其一）：
+从 [GitHub Releases](../../releases) 下载：
 
-- **绿色版**：直接运行 `md-v.exe`，然后在应用内 ⚙ 菜单点「添加右键菜单」即可注册文件关联（写 HKCU，免管理员，可随时移除）
-- **安装包**：运行 `md-v_x.x.x_x64-setup.exe`，自动注册文件关联、创建开始菜单项，支持系统级卸载
+- **Windows**：下载 `md-v-vX.Y.Z-windows-x86_64.exe`，绿色单文件，放到任意目录双击即用。首次运行可能弹出蓝色「Windows 已保护你的电脑」（Microsoft Defender SmartScreen）提示——这是因为小开源项目没有购买商业代码签名证书，属正常现象，并非病毒；点「更多信息」→「仍要运行」即可，只需操作一次。
+- **macOS / Linux**：下载 `.tar.gz` 解压后 `chmod +x` 再运行；macOS 如提示无法打开，先执行一次 `xattr -d com.apple.quarantine <二进制文件>`。
+
+直接运行 `md-v.exe`，然后在应用内 ⚙ 菜单点「添加右键菜单」即可注册文件关联（写 HKCU，免管理员，可随时移除）。
 
 ## 构建
 
@@ -43,7 +45,7 @@
 ```bash
 npm install
 npm run tauri dev      # 开发调试
-npm run tauri build    # 产出绿色版 exe + NSIS 安装包
+npm run tauri build -- --no-bundle    # 产出绿色版 exe
 ```
 
 ## 技术栈
