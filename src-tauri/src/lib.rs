@@ -49,6 +49,66 @@ fn take_pending_file(state: tauri::State<'_, PendingFile>) -> Option<String> {
     state.0.lock().ok()?.take()
 }
 
+fn find_browser() -> Option<std::path::PathBuf> {
+    let mut candidates: Vec<std::path::PathBuf> = Vec::new();
+    #[cfg(windows)]
+    {
+        for key in ["ProgramFiles(x86)", "ProgramFiles", "LOCALAPPDATA"] {
+            if let Ok(dir) = std::env::var(key) {
+                let dir = std::path::Path::new(&dir);
+                candidates.push(dir.join(r"Microsoft\Edge\Application\msedge.exe"));
+                candidates.push(dir.join(r"Google\Chrome\Application\chrome.exe"));
+            }
+        }
+    }
+    #[cfg(target_os = "macos")]
+    {
+        candidates.push("/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge".into());
+        candidates.push("/Applications/Google Chrome.app/Contents/MacOS/Google Chrome".into());
+        candidates.push("/Applications/Chromium.app/Contents/MacOS/Chromium".into());
+    }
+    #[cfg(all(unix, not(target_os = "macos")))]
+    {
+        for name in ["microsoft-edge", "google-chrome", "chromium", "chromium-browser"] {
+            candidates.push(std::path::PathBuf::from(format!("/usr/bin/{}", name)));
+        }
+    }
+    candidates.into_iter().find(|p| p.is_file())
+}
+
+// Renders a self-contained HTML file to PDF via headless Edge/Chrome.
+// Internal anchor links stay clickable in the output PDF, and
+// --generate-pdf-document-outline adds sidebar bookmarks from headings.
+#[tauri::command]
+fn export_pdf(html: String, output_path: String) -> Result<(), String> {
+    let browser = find_browser().ok_or_else(|| "no chromium browser (Edge/Chrome) found".to_string())?;
+    let stamp = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map(|d| d.as_millis())
+        .unwrap_or(0);
+    let tmp = std::env::temp_dir().join(format!("md-v-pdf-{}-{}.html", std::process::id(), stamp));
+    std::fs::write(&tmp, html).map_err(|e| e.to_string())?;
+    let url = format!("file:///{}", tmp.to_string_lossy().replace('\\', "/"));
+    let result = std::process::Command::new(&browser)
+        .args([
+            "--headless=new",
+            "--disable-gpu",
+            "--no-first-run",
+            "--no-default-browser-check",
+            "--no-pdf-header-footer",
+            "--generate-pdf-document-outline",
+        ])
+        .arg(format!("--print-to-pdf={}", output_path))
+        .arg(&url)
+        .status();
+    let _ = std::fs::remove_file(&tmp);
+    match result {
+        Ok(s) if s.success() => Ok(()),
+        Ok(s) => Err(format!("browser exited with code {:?}", s.code())),
+        Err(e) => Err(e.to_string()),
+    }
+}
+
 const PROG_ID: &str = "md-v.md";
 
 // Older versions registered per-extension verbs under SystemFileAssociations;
@@ -251,6 +311,7 @@ pub fn run() {
             get_file_mtime,
             render_markdown,
             take_pending_file,
+            export_pdf,
             context_menu_registered,
             register_context_menu,
             unregister_context_menu

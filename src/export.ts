@@ -125,3 +125,52 @@ export function exportPdf(dark: boolean): void {
   setHljsTheme(false); // force light code highlighting for print
   window.print();
 }
+
+// Builds a TOC page whose entries link to heading anchors; Chromium's
+// print-to-pdf turns them into clickable PDF links.
+function buildPdfToc(body: HTMLElement): string {
+  const headings = Array.from(body.querySelectorAll("h1, h2, h3, h4, h5, h6"));
+  if (headings.length === 0) return "";
+  const items = headings.map((h, i) => {
+    if (!h.id) h.id = `pdf-h-${i}`;
+    const level = Number(h.tagName[1]);
+    return `<div class="toc-l${level}"><a href="#${h.id}">${escapeHtml(h.textContent ?? "")}</a></div>`;
+  });
+  return `<nav id="pdf-toc"><h1>${escapeHtml(t("pdfTocTitle"))}</h1>\n${items.join("\n")}</nav>`;
+}
+
+export async function exportPdfToc(
+  title: string,
+  previewEl: HTMLElement,
+  dark: boolean,
+  fontSize: number,
+): Promise<void> {
+  const path = await save({
+    title: t("exportPdfToc"),
+    defaultPath: `${title}.pdf`,
+    filters: [{ name: "PDF", extensions: ["pdf"] }],
+  });
+  if (!path) return;
+
+  // always light code highlighting for PDF output
+  const css = await inlineFontUrls(collectAppCss() + getHljsCss(false));
+  const body = previewEl.cloneNode(true) as HTMLElement;
+  await inlineImages(body);
+  const tocHtml = buildPdfToc(body);
+  const html = [
+    "<!doctype html>",
+    `<html lang="${document.documentElement.lang}">`,
+    "<head>",
+    '<meta charset="utf-8" />',
+    `<title>${escapeHtml(title)}</title>`,
+    `<style>${css}</style>`,
+    `<style>:root{--font-size:${fontSize}px}html,body{height:auto;overflow:visible}#preview-pane{max-width:900px;margin:0 auto;overflow:visible}@page{size:A4;margin:18mm}#pdf-toc{page-break-after:always;max-width:900px;margin:0 auto}#pdf-toc div{padding:2px 0}#pdf-toc a{color:inherit;text-decoration:none}.toc-l1{font-weight:600}.toc-l2{padding-left:16px}.toc-l3{padding-left:32px}.toc-l4{padding-left:48px}.toc-l5{padding-left:64px}.toc-l6{padding-left:80px}</style>`,
+    "</head>",
+    `<body class="${dark ? "dark" : ""}">`,
+    tocHtml,
+    `<div id="preview-pane">${body.innerHTML}</div>`,
+    "</body></html>",
+  ].join("\n");
+
+  await invoke("export_pdf", { html, outputPath: path });
+}

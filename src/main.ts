@@ -14,7 +14,7 @@ import { langForPath, loadLanguage, langDisplayName, isMarkdownPath, SUPPORTED_E
 import { renderPreview, setHljsTheme } from "./preview";
 import { createToc, type TocController } from "./toc";
 import { addRecent, getRecent, removeRecent, clearRecent } from "./recent";
-import { exportHtml, exportPdf } from "./export";
+import { exportHtml, exportPdf, exportPdfToc } from "./export";
 import { icons } from "./icons";
 import "./styles.css";
 
@@ -576,9 +576,20 @@ async function doExportHtml(): Promise<void> {
   }
 }
 
+async function doExportPdfToc(): Promise<void> {
+  const tab = store.active();
+  if (!tab) return;
+  try {
+    await exportPdfToc(tab.title.replace(/\.(md|markdown)$/i, ""), $("#preview-pane"), isDark(), settings.fontSize);
+  } catch (e) {
+    window.alert(`${t("exportFailed")}${e}`);
+  }
+}
+
 function showExportMenu(): void {
   showMenu($("#btn-export"), [
     { label: t("exportHtml"), onClick: () => void doExportHtml() },
+    { label: t("exportPdfToc"), onClick: () => void doExportPdfToc() },
     { label: t("exportPdf"), onClick: () => exportPdf(isDark()) },
   ]);
 }
