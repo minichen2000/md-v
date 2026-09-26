@@ -159,6 +159,12 @@ const PDF_LAYOUT_CSS = [
   "#pdf-toc .toc-l4{padding-left:72px;font-size:0.88em}",
   "#pdf-toc .toc-l5{padding-left:96px;font-size:0.88em}",
   "#pdf-toc .toc-l6{padding-left:120px;font-size:0.88em}",
+  // Word-like pagination: keep headings with following content, avoid
+  // splitting rows/code blocks/images across pages when they fit on one
+  "h1,h2,h3,h4,h5,h6{break-after:avoid}",
+  "p{orphans:3;widows:3}",
+  "pre,blockquote,table,img,svg,figure{break-inside:avoid}",
+  "tr,td,th{break-inside:avoid}",
 ].join("");
 
 export async function exportPdfToc(
