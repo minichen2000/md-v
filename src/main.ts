@@ -170,7 +170,7 @@ function updateLayoutMode(): void {
     $("#editor-pane").style.display = editor ? "block" : "none";
     $("#toc").style.display = tocOn ? "block" : "none";
     $("#toc-splitter").style.display = !plain && editor && tocOn ? "block" : "none";
-    $("#splitter").style.display = !plain && editor ? "block" : "none";
+    $("#splitter").style.display = !plain && (editor || tocOn) ? "block" : "none";
     $("#preview-pane").style.display = plain ? "none" : "block";
     $("#workspace").style.gridTemplateColumns = plain ? "1fr" : gridColumns();
   } else {
@@ -195,7 +195,7 @@ function gridColumns(): string {
     return `calc((100% - ${settings.tocWidth + 8}px) * ${r}) 4px ${settings.tocWidth}px 4px 1fr`;
   }
   if (editor) return `${settings.splitRatio}% 4px 1fr`;
-  if (tocVisible()) return `${settings.tocWidth}px 1fr`;
+  if (tocVisible()) return `${settings.tocWidth}px 4px 1fr`;
   return "1fr";
 }
 
@@ -751,10 +751,15 @@ function wireEvents(): void {
     const workspace = $("#workspace");
     const onMove = (ev: MouseEvent) => {
       const rect = workspace.getBoundingClientRect();
-      const tocW = tocVisible() ? settings.tocWidth + 4 : 0;
-      const avail = rect.width - tocW - 4;
-      const ratio = ((ev.clientX - rect.left - tocW) / avail) * 100;
-      settings.splitRatio = Math.min(80, Math.max(15, ratio));
+      if (!editorVisible()) {
+        // editor hidden: the splitter sits between TOC and preview, drags TOC width
+        settings.tocWidth = Math.min(480, Math.max(120, ev.clientX - rect.left));
+      } else {
+        const tocW = tocVisible() ? settings.tocWidth + 4 : 0;
+        const avail = rect.width - tocW - 4;
+        const ratio = ((ev.clientX - rect.left - tocW) / avail) * 100;
+        settings.splitRatio = Math.min(80, Math.max(15, ratio));
+      }
       workspace.style.gridTemplateColumns = gridColumns();
     };
     const onUp = () => {
