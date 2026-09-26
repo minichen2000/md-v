@@ -872,6 +872,23 @@ function wireEvents(): void {
   const previewPane = $("#preview-pane");
   previewPane.addEventListener("scroll", () => handlePaneScroll("preview"));
   previewPane.addEventListener("mouseenter", () => markSource("preview"));
+  // links in the preview: external ones go to the system browser, #anchors scroll in-pane
+  previewPane.addEventListener("click", (e) => {
+    const a = (e.target as HTMLElement).closest("a");
+    if (!a) return;
+    const href = a.getAttribute("href") ?? "";
+    if (/^(https?:|mailto:)/i.test(href)) {
+      e.preventDefault();
+      void openUrl(href).catch(() => {});
+    } else if (href.startsWith("#")) {
+      e.preventDefault();
+      try {
+        previewPane.querySelector(`#${CSS.escape(href.slice(1))}`)?.scrollIntoView();
+      } catch {
+        // malformed anchor; ignore
+      }
+    }
+  });
 
   window.setInterval(() => {
     if (document.visibilityState !== "visible") return;
