@@ -51,9 +51,10 @@ fn take_pending_file(state: tauri::State<'_, PendingFile>) -> Option<String> {
 
 const PROG_ID: &str = "md-v.md";
 
-// Extensions that only get an "Open with md-v" verb (via SystemFileAssociations),
-// without touching their default double-click association.
-const EXTRA_EXTS: &[&str] = &[
+// Older versions registered per-extension verbs under SystemFileAssociations;
+// kept only so unregister() can clean them up. Registration now uses a single
+// wildcard verb under `*` which covers every file, present and future.
+const LEGACY_EXTRA_EXTS: &[&str] = &[
     "txt", "log", "text", "csv",
     "mdown", "mkd",
     "json", "jsonc", "xml", "xsl", "svg", "xhtml",
@@ -130,21 +131,16 @@ mod context_menu {
         let (cmd, _) = verb.create_subkey("command").map_err(|e| e.to_string())?;
         cmd.set_value("", &format!("\"{}\" \"%1\"", exe))
             .map_err(|e| e.to_string())?;
-        // verb-only entries for other text extensions, leaving their default apps alone
-        for ext in super::EXTRA_EXTS {
-            let (verb, _) = classes
-                .create_subkey(format!(
-                    r"SystemFileAssociations\.{}\shell\Open with md-v",
-                    ext
-                ))
-                .map_err(|e| e.to_string())?;
-            verb.set_value("", &"Open with md-v")
-                .map_err(|e| e.to_string())?;
-            verb.set_value("Icon", &exe).map_err(|e| e.to_string())?;
-            let (cmd, _) = verb.create_subkey("command").map_err(|e| e.to_string())?;
-            cmd.set_value("", &format!("\"{}\" \"%1\"", exe))
-                .map_err(|e| e.to_string())?;
-        }
+        // wildcard verb: "Open with md-v" on every file, default apps untouched
+        let (verb, _) = classes
+            .create_subkey(r"*\shell\Open with md-v")
+            .map_err(|e| e.to_string())?;
+        verb.set_value("", &"Open with md-v")
+            .map_err(|e| e.to_string())?;
+        verb.set_value("Icon", &exe).map_err(|e| e.to_string())?;
+        let (cmd, _) = verb.create_subkey("command").map_err(|e| e.to_string())?;
+        cmd.set_value("", &format!("\"{}\" \"%1\"", exe))
+            .map_err(|e| e.to_string())?;
         Ok(())
     }
 
@@ -176,7 +172,9 @@ mod context_menu {
             }
         }
         reg_delete(&["delete", &format!(r"HKCU\Software\Classes\{}", PROG_ID), "/f"])?;
-        for ext in super::EXTRA_EXTS {
+        reg_delete(&["delete", r"HKCU\Software\Classes\*\shell\Open with md-v", "/f"])?;
+        // clean up per-extension verbs written by older versions
+        for ext in super::LEGACY_EXTRA_EXTS {
             reg_delete(&[
                 "delete",
                 &format!(

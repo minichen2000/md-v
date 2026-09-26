@@ -17,7 +17,7 @@ Built on **Tauri v2** (Rust + system WebView), the single portable exe is only ~
 - **Outline TOC**: h1–h4 sidebar with click-to-jump and scroll-highlighted current section
 - **Export**: one-click export to standalone HTML (inlined styles and fonts, works offline) / PDF (system print)
 - **Personalization**: light/dark themes, font zoom (Ctrl+wheel), Chinese/English UI, settings persisted automatically
-- **System integration**: `.md` file association and Explorer context menu "Open with md-v" (one-click register/remove inside the app, no admin rights required); other text extensions (.txt/.json/.py etc.) only get the context-menu entry without changing their default double-click app
+- **System integration**: `.md` file association and Explorer context menu "Open with md-v" (one-click register/remove inside the app, no admin rights required); the context-menu entry is registered with a wildcard so it appears on **every file**, without changing any extension's default app
 - **File guard**: prompts to reload when the file on disk is modified externally, preventing accidental overwrites
 
 ## Keyboard Shortcuts
