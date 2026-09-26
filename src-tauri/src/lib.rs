@@ -88,6 +88,10 @@ fn export_pdf(html: String, output_path: String) -> Result<(), String> {
         .unwrap_or(0);
     let tmp = std::env::temp_dir().join(format!("md-v-pdf-{}-{}.html", std::process::id(), stamp));
     std::fs::write(&tmp, html).map_err(|e| e.to_string())?;
+    // dedicated profile dir: without it, a second Edge/Chrome launch is forwarded
+    // to the already-running instance (Chromium singleton), our process exits
+    // immediately, and the temp file is gone by the time printing happens
+    let profile = std::env::temp_dir().join(format!("md-v-pdf-profile-{}-{}", std::process::id(), stamp));
     let url = format!("file:///{}", tmp.to_string_lossy().replace('\\', "/"));
     let result = std::process::Command::new(&browser)
         .args([
@@ -98,10 +102,12 @@ fn export_pdf(html: String, output_path: String) -> Result<(), String> {
             "--no-pdf-header-footer",
             "--generate-pdf-document-outline",
         ])
+        .arg(format!("--user-data-dir={}", profile.to_string_lossy()))
         .arg(format!("--print-to-pdf={}", output_path))
         .arg(&url)
         .status();
     let _ = std::fs::remove_file(&tmp);
+    let _ = std::fs::remove_dir_all(&profile);
     match result {
         Ok(s) if s.success() => Ok(()),
         Ok(s) => Err(format!("browser exited with code {:?}", s.code())),
