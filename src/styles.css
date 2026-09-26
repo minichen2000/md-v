@@ -222,12 +222,14 @@ body.dark {
   overflow-y: scroll;
 }
 
-#splitter {
+#splitter,
+#toc-splitter {
   cursor: col-resize;
   background: var(--border);
 }
 
-#splitter:hover {
+#splitter:hover,
+#toc-splitter:hover {
   background: var(--accent);
 }
 
@@ -454,10 +456,9 @@ body.dark {
   margin: 4px 6px;
 }
 
-/* ---- TOC sidebar (leftmost grid column) ---- */
+/* ---- TOC sidebar (between editor and preview) ---- */
 
 #toc {
-  width: 220px;
   overflow-y: auto;
   background: var(--bg);
   border-right: 1px solid var(--border);
@@ -516,6 +517,7 @@ body.dark {
   #topbar,
   #editor-pane,
   #splitter,
+  #toc-splitter,
   #statusbar,
   #welcome,
   #toc {

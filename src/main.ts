@@ -43,6 +43,7 @@ function buildLayout(): void {
         <span class="sep"></span>
         <button id="btn-sync" data-i18n-title="syncScroll"></button>
         <button id="btn-toc" data-i18n-title="toc"></button>
+        <button id="btn-editor" data-i18n-title="toggleEditor"></button>
         <button id="btn-theme" data-i18n-title="toggleTheme"></button>
         <button id="btn-lang"></button>
         <span class="sep"></span>
@@ -64,6 +65,7 @@ function buildLayout(): void {
         <p data-i18n="welcomeDrag"></p>
       </div>
       <div id="editor-pane"></div>
+      <div id="toc-splitter"></div>
       <aside id="toc"></aside>
       <div id="splitter"></div>
       <div id="preview-pane"></div>
@@ -78,6 +80,7 @@ function buildLayout(): void {
   $("#btn-save").innerHTML = icons.save;
   $("#btn-sync").innerHTML = icons.sync;
   $("#btn-toc").innerHTML = icons.toc;
+  $("#btn-editor").innerHTML = icons.editor;
   $("#btn-lang").innerHTML = icons.lang;
   $("#btn-export").innerHTML = icons.export;
   $("#btn-settings").innerHTML = icons.settings;
@@ -145,10 +148,12 @@ function isDark(): boolean {
   return settings.theme === "dark";
 }
 
-const TOC_WIDTH = 220;
-
 function tocVisible(): boolean {
   return settings.showToc && store.active() !== undefined && !plainMode();
+}
+
+function editorVisible(): boolean {
+  return settings.showEditor || plainMode();
 }
 
 function plainMode(): boolean {
@@ -159,15 +164,24 @@ function plainMode(): boolean {
 function updateLayoutMode(): void {
   const tab = store.active();
   const plain = plainMode();
-  $("#toc").style.display = tocVisible() ? "block" : "none";
   if (tab) {
-    $("#splitter").style.display = plain ? "none" : "block";
+    const editor = editorVisible();
+    const tocOn = tocVisible();
+    $("#editor-pane").style.display = editor ? "block" : "none";
+    $("#toc").style.display = tocOn ? "block" : "none";
+    $("#toc-splitter").style.display = !plain && editor && tocOn ? "block" : "none";
+    $("#splitter").style.display = !plain && editor ? "block" : "none";
     $("#preview-pane").style.display = plain ? "none" : "block";
     $("#workspace").style.gridTemplateColumns = plain ? "1fr" : gridColumns();
   } else {
+    $("#editor-pane").style.display = "none";
+    $("#toc").style.display = "none";
+    $("#toc-splitter").style.display = "none";
+    $("#splitter").style.display = "none";
+    $("#preview-pane").style.display = "none";
     $("#workspace").style.gridTemplateColumns = "1fr";
   }
-  for (const id of ["#btn-toc", "#btn-sync", "#btn-export"]) {
+  for (const id of ["#btn-toc", "#btn-sync", "#btn-export", "#btn-editor"]) {
     const btn = $(id) as HTMLButtonElement;
     btn.disabled = plain;
     btn.title = plain ? t("plainOnly") : t(btn.dataset.i18nTitle!);
@@ -175,11 +189,14 @@ function updateLayoutMode(): void {
 }
 
 function gridColumns(): string {
-  if (tocVisible()) {
+  const editor = editorVisible();
+  if (editor && tocVisible()) {
     const r = (settings.splitRatio / 100).toFixed(4);
-    return `calc((100% - ${TOC_WIDTH + 4}px) * ${r}) ${TOC_WIDTH}px 4px 1fr`;
+    return `calc((100% - ${settings.tocWidth + 8}px) * ${r}) 4px ${settings.tocWidth}px 4px 1fr`;
   }
-  return `${settings.splitRatio}% 4px 1fr`;
+  if (editor) return `${settings.splitRatio}% 4px 1fr`;
+  if (tocVisible()) return `${settings.tocWidth}px 1fr`;
+  return "1fr";
 }
 
 function applySettings(rerender = true): void {
@@ -193,6 +210,7 @@ function applySettings(rerender = true): void {
   langBtn.title = t("toggleLang");
   $("#btn-sync").classList.toggle("on", settings.syncScroll);
   $("#btn-toc").classList.toggle("on", settings.showToc);
+  $("#btn-editor").classList.toggle("on", settings.showEditor);
   updateLayoutMode();
   saveSettings(settings);
   if (rerender) rerenderActive();
@@ -200,9 +218,6 @@ function applySettings(rerender = true): void {
 
 function showWelcome(show: boolean): void {
   $("#welcome").style.display = show ? "flex" : "none";
-  $("#editor-pane").style.display = show ? "none" : "block";
-  $("#splitter").style.display = show ? "none" : "block";
-  $("#preview-pane").style.display = show ? "none" : "block";
 }
 
 function destroyEditor(): void {
@@ -664,6 +679,10 @@ function wireEvents(): void {
     settings.showToc = !settings.showToc;
     applySettings(false);
   });
+  $("#btn-editor").addEventListener("click", () => {
+    settings.showEditor = !settings.showEditor;
+    applySettings(false);
+  });
   $("#btn-export").addEventListener("click", () => showExportMenu());
   $("#btn-settings").addEventListener("click", () => showSettingsMenu());
 
@@ -732,10 +751,30 @@ function wireEvents(): void {
     const workspace = $("#workspace");
     const onMove = (ev: MouseEvent) => {
       const rect = workspace.getBoundingClientRect();
-      const tocW = tocVisible() ? TOC_WIDTH : 0;
+      const tocW = tocVisible() ? settings.tocWidth + 4 : 0;
       const avail = rect.width - tocW - 4;
-      const ratio = ((ev.clientX - rect.left - tocW - 4) / avail) * 100;
+      const ratio = ((ev.clientX - rect.left - tocW) / avail) * 100;
       settings.splitRatio = Math.min(80, Math.max(15, ratio));
+      workspace.style.gridTemplateColumns = gridColumns();
+    };
+    const onUp = () => {
+      window.removeEventListener("mousemove", onMove);
+      window.removeEventListener("mouseup", onUp);
+      saveSettings(settings);
+    };
+    window.addEventListener("mousemove", onMove);
+    window.addEventListener("mouseup", onUp);
+  });
+
+  const tocSplitter = $("#toc-splitter");
+  tocSplitter.addEventListener("mousedown", (e) => {
+    e.preventDefault();
+    const workspace = $("#workspace");
+    const onMove = (ev: MouseEvent) => {
+      const rect = workspace.getBoundingClientRect();
+      const r = settings.splitRatio / 100;
+      const w = rect.width - 8 - (ev.clientX - rect.left - 4) / r;
+      settings.tocWidth = Math.min(480, Math.max(120, w));
       workspace.style.gridTemplateColumns = gridColumns();
     };
     const onUp = () => {

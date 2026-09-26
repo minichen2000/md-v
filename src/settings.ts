@@ -8,6 +8,8 @@ export interface Settings {
   splitRatio: number;
   syncScroll: boolean;
   showToc: boolean;
+  tocWidth: number;
+  showEditor: boolean;
   restoreTabs: boolean;
 }
 
@@ -22,6 +24,8 @@ const DEFAULTS: Settings = {
   splitRatio: 35,
   syncScroll: true,
   showToc: false,
+  tocWidth: 220,
+  showEditor: true,
   restoreTabs: false,
 };
 
@@ -37,6 +41,8 @@ export function loadSettings(): Settings {
       splitRatio: clamp(num(parsed.splitRatio, DEFAULTS.splitRatio), 15, 80),
       syncScroll: bool(parsed.syncScroll, DEFAULTS.syncScroll),
       showToc: bool(parsed.showToc, DEFAULTS.showToc),
+      tocWidth: clamp(num(parsed.tocWidth, DEFAULTS.tocWidth), 120, 480),
+      showEditor: bool(parsed.showEditor, DEFAULTS.showEditor),
       restoreTabs: bool(parsed.restoreTabs, DEFAULTS.restoreTabs),
     };
   } catch {
