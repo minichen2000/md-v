@@ -3,10 +3,13 @@ import { getCurrentWebview } from "@tauri-apps/api/webview";
 import { listen } from "@tauri-apps/api/event";
 import { open, save, ask } from "@tauri-apps/plugin-dialog";
 import { openUrl } from "@tauri-apps/plugin-opener";
+import { Compartment } from "@codemirror/state";
+import { markdown } from "@codemirror/lang-markdown";
 import { loadSettings, saveSettings, type Settings } from "./settings";
 import { t, setLang, getLang } from "./i18n";
 import { TabStore, fileName, type Tab } from "./tabs";
 import { createEditor } from "./editor";
+import { langForPath, loadLanguage, langDisplayName, isMarkdownPath, SUPPORTED_EXTS } from "./langs";
 import { renderPreview, setHljsTheme } from "./preview";
 import { createToc, type TocController } from "./toc";
 import { addRecent, getRecent, removeRecent, clearRecent } from "./recent";
@@ -145,7 +148,25 @@ function isDark(): boolean {
 const TOC_WIDTH = 220;
 
 function tocVisible(): boolean {
-  return settings.showToc && store.active() !== undefined;
+  return settings.showToc && store.active() !== undefined && !plainMode();
+}
+
+function plainMode(): boolean {
+  const tab = store.active();
+  return tab !== undefined && !isMarkdownPath(tab.path);
+}
+
+function updateLayoutMode(): void {
+  const plain = plainMode();
+  $("#toc").style.display = tocVisible() ? "block" : "none";
+  $("#splitter").style.display = plain ? "none" : "block";
+  $("#preview-pane").style.display = plain ? "none" : "block";
+  $("#workspace").style.gridTemplateColumns = plain ? "1fr" : gridColumns();
+  for (const id of ["#btn-toc", "#btn-sync", "#btn-export"]) {
+    const btn = $(id) as HTMLButtonElement;
+    btn.disabled = plain;
+    btn.title = plain ? t("plainOnly") : t(btn.dataset.i18nTitle!);
+  }
 }
 
 function gridColumns(): string {
@@ -154,11 +175,6 @@ function gridColumns(): string {
     return `calc((100% - ${TOC_WIDTH + 4}px) * ${r}) ${TOC_WIDTH}px 4px 1fr`;
   }
   return `${settings.splitRatio}% 4px 1fr`;
-}
-
-function updateTocVisibility(): void {
-  $("#toc").style.display = tocVisible() ? "block" : "none";
-  $("#workspace").style.gridTemplateColumns = gridColumns();
 }
 
 function applySettings(rerender = true): void {
@@ -172,7 +188,7 @@ function applySettings(rerender = true): void {
   langBtn.title = t("toggleLang");
   $("#btn-sync").classList.toggle("on", settings.syncScroll);
   $("#btn-toc").classList.toggle("on", settings.showToc);
-  updateTocVisibility();
+  updateLayoutMode();
   saveSettings(settings);
   if (rerender) rerenderActive();
 }
@@ -195,19 +211,37 @@ function mountEditor(tab: Tab): void {
   destroyEditor();
   const pane = $("#editor-pane");
   pane.innerHTML = "";
-  editorView = createEditor(pane, tab.doc, isDark(), (doc) => {
-    tab.doc = doc;
-    if (!tab.dirty) {
-      tab.dirty = true;
-      refreshTabBar();
-    }
-    updateStatus();
-    schedulePreview(tab);
-  });
+  const langId = langForPath(tab.path);
+  const langComp = new Compartment();
+  editorView = createEditor(
+    pane,
+    tab.doc,
+    isDark(),
+    (doc) => {
+      tab.doc = doc;
+      if (!tab.dirty) {
+        tab.dirty = true;
+        refreshTabBar();
+      }
+      updateStatus();
+      schedulePreview(tab);
+    },
+    langComp,
+    langId === "markdown" ? markdown() : [],
+  );
+  if (langId !== "markdown") {
+    const view = editorView;
+    loadLanguage(langId)
+      .then((ext) => {
+        if (editorView === view) view.dispatch({ effects: langComp.reconfigure(ext) });
+      })
+      .catch(() => {});
+  }
   editorView.scrollDOM.scrollTop = tab.scrollTop;
 }
 
 function schedulePreview(tab: Tab): void {
+  if (!isMarkdownPath(tab.path)) return;
   if (renderTimer !== null) window.clearTimeout(renderTimer);
   renderTimer = window.setTimeout(() => {
     renderTimer = null;
@@ -217,7 +251,7 @@ function schedulePreview(tab: Tab): void {
 
 async function renderActivePreview(): Promise<void> {
   const tab = store.active();
-  if (!tab) return;
+  if (!tab || !isMarkdownPath(tab.path)) return;
   await renderPreview($("#preview-pane"), tab.doc, isDark(), tab.path ?? undefined);
   toc.rebuild();
 }
@@ -251,7 +285,8 @@ function updateStatus(): void {
   pathEl.textContent = tab.path ?? tab.title;
   pathEl.title = tab.path ?? "";
   const lines = tab.doc === "" ? 0 : tab.doc.split("\n").length;
-  statsEl.textContent = `${tab.doc.length} ${t("statusChars")} · ${lines} ${t("statusLines")}`;
+  const langName = langDisplayName(langForPath(tab.path));
+  statsEl.textContent = `${tab.doc.length} ${t("statusChars")} · ${lines} ${t("statusLines")} · ${langName}`;
 }
 
 /* ---- session persistence (restore tabs) ---- */
@@ -300,7 +335,7 @@ function activateTab(id: number): void {
     toc.clear();
     showWelcome(true);
   }
-  updateTocVisibility();
+  updateLayoutMode();
   updateStatus();
   persistSession();
 }
@@ -335,7 +370,10 @@ async function openDialog(): Promise<void> {
   const result = await open({
     title: t("openDialogTitle"),
     multiple: true,
-    filters: [{ name: t("markdownFiles"), extensions: ["md", "markdown", "mdown", "mkd", "txt"] }],
+    filters: [
+      { name: t("allSupportedFiles"), extensions: [...SUPPORTED_EXTS] },
+      { name: t("markdownFiles"), extensions: ["md", "markdown", "mdown", "mkd", "txt"] },
+    ],
   });
   if (!result) return;
   await openFiles(Array.isArray(result) ? result : [result]);
@@ -385,7 +423,7 @@ function closeTab(id: number): void {
       toc.clear();
       refreshTabBar();
       showWelcome(true);
-      updateTocVisibility();
+      updateLayoutMode();
       updateStatus();
       persistSession();
     }
@@ -464,7 +502,7 @@ function markSource(pane: Pane): void {
 
 function handlePaneScroll(pane: Pane): void {
   if (pane === "preview") scheduleTocUpdate();
-  if (!settings.syncScroll) return;
+  if (!settings.syncScroll || plainMode()) return;
   const now = performance.now();
   if (scrollSource !== pane && now - scrollStamp < 300) return; // follower side: ignore
   markSource(pane);

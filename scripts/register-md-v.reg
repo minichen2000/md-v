@@ -5,15 +5,22 @@ Windows Registry Editor Version 5.00
 ;
 ; 用法：
 ;   1. 把本文件中所有  C:\\Path\\To\\md-v.exe  替换为 md-v.exe
-;      的实际完整路径（注意保持双反斜杠），共 3 处；
+;      的实际完整路径（注意保持双反斜杠，可用编辑器"全部替换"）；
 ;   2. 保存后双击导入；
-;   3. 效果：.md / .markdown 文件图标变为 md-v 图标，
-;      资源管理器右键出现 "Open with md-v"，
-;      双击 .md 默认用 md-v 打开。
+;   3. 效果：
+;      - .md / .markdown：完整关联 —— 图标变为 md-v 图标，
+;        双击默认用 md-v 打开，右键出现 "Open with md-v"；
+;      - 其它文本后缀（.txt .json .xml .yaml .py .sh 等）：
+;        只在右键菜单增加 "Open with md-v"，
+;        不改变双击默认打开方式。
 ; 卸载：删除注册表项 HKCU\Software\Classes\.md、
 ;       HKCU\Software\Classes\.markdown、
-;       HKCU\Software\Classes\md-v.md 即可。
+;       HKCU\Software\Classes\md-v.md，以及
+;       HKCU\Software\Classes\SystemFileAssociations\ 下
+;       各后缀的 shell\Open with md-v 子键。
 ; ============================================================
+
+; ---- .md / .markdown 完整关联 ----
 
 [HKEY_CURRENT_USER\Software\Classes\.md]
 @="md-v.md"
@@ -32,4 +39,180 @@ Windows Registry Editor Version 5.00
 "Icon"="C:\\Path\\To\\md-v.exe,0"
 
 [HKEY_CURRENT_USER\Software\Classes\md-v.md\shell\Open with md-v\command]
+@="\"C:\\Path\\To\\md-v.exe\" \"%1\""
+
+; ---- 其它文本后缀：仅右键项，不动默认关联 ----
+
+[HKEY_CURRENT_USER\Software\Classes\SystemFileAssociations\.txt\shell\Open with md-v]
+@="Open with md-v"
+"Icon"="C:\\Path\\To\\md-v.exe,0"
+[HKEY_CURRENT_USER\Software\Classes\SystemFileAssociations\.txt\shell\Open with md-v\command]
+@="\"C:\\Path\\To\\md-v.exe\" \"%1\""
+
+[HKEY_CURRENT_USER\Software\Classes\SystemFileAssociations\.log\shell\Open with md-v]
+@="Open with md-v"
+"Icon"="C:\\Path\\To\\md-v.exe,0"
+[HKEY_CURRENT_USER\Software\Classes\SystemFileAssociations\.log\shell\Open with md-v\command]
+@="\"C:\\Path\\To\\md-v.exe\" \"%1\""
+
+[HKEY_CURRENT_USER\Software\Classes\SystemFileAssociations\.json\shell\Open with md-v]
+@="Open with md-v"
+"Icon"="C:\\Path\\To\\md-v.exe,0"
+[HKEY_CURRENT_USER\Software\Classes\SystemFileAssociations\.json\shell\Open with md-v\command]
+@="\"C:\\Path\\To\\md-v.exe\" \"%1\""
+
+[HKEY_CURRENT_USER\Software\Classes\SystemFileAssociations\.jsonc\shell\Open with md-v]
+@="Open with md-v"
+"Icon"="C:\\Path\\To\\md-v.exe,0"
+[HKEY_CURRENT_USER\Software\Classes\SystemFileAssociations\.jsonc\shell\Open with md-v\command]
+@="\"C:\\Path\\To\\md-v.exe\" \"%1\""
+
+[HKEY_CURRENT_USER\Software\Classes\SystemFileAssociations\.xml\shell\Open with md-v]
+@="Open with md-v"
+"Icon"="C:\\Path\\To\\md-v.exe,0"
+[HKEY_CURRENT_USER\Software\Classes\SystemFileAssociations\.xml\shell\Open with md-v\command]
+@="\"C:\\Path\\To\\md-v.exe\" \"%1\""
+
+[HKEY_CURRENT_USER\Software\Classes\SystemFileAssociations\.yaml\shell\Open with md-v]
+@="Open with md-v"
+"Icon"="C:\\Path\\To\\md-v.exe,0"
+[HKEY_CURRENT_USER\Software\Classes\SystemFileAssociations\.yaml\shell\Open with md-v\command]
+@="\"C:\\Path\\To\\md-v.exe\" \"%1\""
+
+[HKEY_CURRENT_USER\Software\Classes\SystemFileAssociations\.yml\shell\Open with md-v]
+@="Open with md-v"
+"Icon"="C:\\Path\\To\\md-v.exe,0"
+[HKEY_CURRENT_USER\Software\Classes\SystemFileAssociations\.yml\shell\Open with md-v\command]
+@="\"C:\\Path\\To\\md-v.exe\" \"%1\""
+
+[HKEY_CURRENT_USER\Software\Classes\SystemFileAssociations\.toml\shell\Open with md-v]
+@="Open with md-v"
+"Icon"="C:\\Path\\To\\md-v.exe,0"
+[HKEY_CURRENT_USER\Software\Classes\SystemFileAssociations\.toml\shell\Open with md-v\command]
+@="\"C:\\Path\\To\\md-v.exe\" \"%1\""
+
+[HKEY_CURRENT_USER\Software\Classes\SystemFileAssociations\.ini\shell\Open with md-v]
+@="Open with md-v"
+"Icon"="C:\\Path\\To\\md-v.exe,0"
+[HKEY_CURRENT_USER\Software\Classes\SystemFileAssociations\.ini\shell\Open with md-v\command]
+@="\"C:\\Path\\To\\md-v.exe\" \"%1\""
+
+[HKEY_CURRENT_USER\Software\Classes\SystemFileAssociations\.conf\shell\Open with md-v]
+@="Open with md-v"
+"Icon"="C:\\Path\\To\\md-v.exe,0"
+[HKEY_CURRENT_USER\Software\Classes\SystemFileAssociations\.conf\shell\Open with md-v\command]
+@="\"C:\\Path\\To\\md-v.exe\" \"%1\""
+
+[HKEY_CURRENT_USER\Software\Classes\SystemFileAssociations\.cfg\shell\Open with md-v]
+@="Open with md-v"
+"Icon"="C:\\Path\\To\\md-v.exe,0"
+[HKEY_CURRENT_USER\Software\Classes\SystemFileAssociations\.cfg\shell\Open with md-v\command]
+@="\"C:\\Path\\To\\md-v.exe\" \"%1\""
+
+[HKEY_CURRENT_USER\Software\Classes\SystemFileAssociations\.sh\shell\Open with md-v]
+@="Open with md-v"
+"Icon"="C:\\Path\\To\\md-v.exe,0"
+[HKEY_CURRENT_USER\Software\Classes\SystemFileAssociations\.sh\shell\Open with md-v\command]
+@="\"C:\\Path\\To\\md-v.exe\" \"%1\""
+
+[HKEY_CURRENT_USER\Software\Classes\SystemFileAssociations\.ps1\shell\Open with md-v]
+@="Open with md-v"
+"Icon"="C:\\Path\\To\\md-v.exe,0"
+[HKEY_CURRENT_USER\Software\Classes\SystemFileAssociations\.ps1\shell\Open with md-v\command]
+@="\"C:\\Path\\To\\md-v.exe\" \"%1\""
+
+[HKEY_CURRENT_USER\Software\Classes\SystemFileAssociations\.py\shell\Open with md-v]
+@="Open with md-v"
+"Icon"="C:\\Path\\To\\md-v.exe,0"
+[HKEY_CURRENT_USER\Software\Classes\SystemFileAssociations\.py\shell\Open with md-v\command]
+@="\"C:\\Path\\To\\md-v.exe\" \"%1\""
+
+[HKEY_CURRENT_USER\Software\Classes\SystemFileAssociations\.pyw\shell\Open with md-v]
+@="Open with md-v"
+"Icon"="C:\\Path\\To\\md-v.exe,0"
+[HKEY_CURRENT_USER\Software\Classes\SystemFileAssociations\.pyw\shell\Open with md-v\command]
+@="\"C:\\Path\\To\\md-v.exe\" \"%1\""
+
+[HKEY_CURRENT_USER\Software\Classes\SystemFileAssociations\.js\shell\Open with md-v]
+@="Open with md-v"
+"Icon"="C:\\Path\\To\\md-v.exe,0"
+[HKEY_CURRENT_USER\Software\Classes\SystemFileAssociations\.js\shell\Open with md-v\command]
+@="\"C:\\Path\\To\\md-v.exe\" \"%1\""
+
+[HKEY_CURRENT_USER\Software\Classes\SystemFileAssociations\.ts\shell\Open with md-v]
+@="Open with md-v"
+"Icon"="C:\\Path\\To\\md-v.exe,0"
+[HKEY_CURRENT_USER\Software\Classes\SystemFileAssociations\.ts\shell\Open with md-v\command]
+@="\"C:\\Path\\To\\md-v.exe\" \"%1\""
+
+[HKEY_CURRENT_USER\Software\Classes\SystemFileAssociations\.html\shell\Open with md-v]
+@="Open with md-v"
+"Icon"="C:\\Path\\To\\md-v.exe,0"
+[HKEY_CURRENT_USER\Software\Classes\SystemFileAssociations\.html\shell\Open with md-v\command]
+@="\"C:\\Path\\To\\md-v.exe\" \"%1\""
+
+[HKEY_CURRENT_USER\Software\Classes\SystemFileAssociations\.htm\shell\Open with md-v]
+@="Open with md-v"
+"Icon"="C:\\Path\\To\\md-v.exe,0"
+[HKEY_CURRENT_USER\Software\Classes\SystemFileAssociations\.htm\shell\Open with md-v\command]
+@="\"C:\\Path\\To\\md-v.exe\" \"%1\""
+
+[HKEY_CURRENT_USER\Software\Classes\SystemFileAssociations\.css\shell\Open with md-v]
+@="Open with md-v"
+"Icon"="C:\\Path\\To\\md-v.exe,0"
+[HKEY_CURRENT_USER\Software\Classes\SystemFileAssociations\.css\shell\Open with md-v\command]
+@="\"C:\\Path\\To\\md-v.exe\" \"%1\""
+
+[HKEY_CURRENT_USER\Software\Classes\SystemFileAssociations\.sql\shell\Open with md-v]
+@="Open with md-v"
+"Icon"="C:\\Path\\To\\md-v.exe,0"
+[HKEY_CURRENT_USER\Software\Classes\SystemFileAssociations\.sql\shell\Open with md-v\command]
+@="\"C:\\Path\\To\\md-v.exe\" \"%1\""
+
+[HKEY_CURRENT_USER\Software\Classes\SystemFileAssociations\.rs\shell\Open with md-v]
+@="Open with md-v"
+"Icon"="C:\\Path\\To\\md-v.exe,0"
+[HKEY_CURRENT_USER\Software\Classes\SystemFileAssociations\.rs\shell\Open with md-v\command]
+@="\"C:\\Path\\To\\md-v.exe\" \"%1\""
+
+[HKEY_CURRENT_USER\Software\Classes\SystemFileAssociations\.c\shell\Open with md-v]
+@="Open with md-v"
+"Icon"="C:\\Path\\To\\md-v.exe,0"
+[HKEY_CURRENT_USER\Software\Classes\SystemFileAssociations\.c\shell\Open with md-v\command]
+@="\"C:\\Path\\To\\md-v.exe\" \"%1\""
+
+[HKEY_CURRENT_USER\Software\Classes\SystemFileAssociations\.cpp\shell\Open with md-v]
+@="Open with md-v"
+"Icon"="C:\\Path\\To\\md-v.exe,0"
+[HKEY_CURRENT_USER\Software\Classes\SystemFileAssociations\.cpp\shell\Open with md-v\command]
+@="\"C:\\Path\\To\\md-v.exe\" \"%1\""
+
+[HKEY_CURRENT_USER\Software\Classes\SystemFileAssociations\.h\shell\Open with md-v]
+@="Open with md-v"
+"Icon"="C:\\Path\\To\\md-v.exe,0"
+[HKEY_CURRENT_USER\Software\Classes\SystemFileAssociations\.h\shell\Open with md-v\command]
+@="\"C:\\Path\\To\\md-v.exe\" \"%1\""
+
+[HKEY_CURRENT_USER\Software\Classes\SystemFileAssociations\.java\shell\Open with md-v]
+@="Open with md-v"
+"Icon"="C:\\Path\\To\\md-v.exe,0"
+[HKEY_CURRENT_USER\Software\Classes\SystemFileAssociations\.java\shell\Open with md-v\command]
+@="\"C:\\Path\\To\\md-v.exe\" \"%1\""
+
+[HKEY_CURRENT_USER\Software\Classes\SystemFileAssociations\.php\shell\Open with md-v]
+@="Open with md-v"
+"Icon"="C:\\Path\\To\\md-v.exe,0"
+[HKEY_CURRENT_USER\Software\Classes\SystemFileAssociations\.php\shell\Open with md-v\command]
+@="\"C:\\Path\\To\\md-v.exe\" \"%1\""
+
+[HKEY_CURRENT_USER\Software\Classes\SystemFileAssociations\.diff\shell\Open with md-v]
+@="Open with md-v"
+"Icon"="C:\\Path\\To\\md-v.exe,0"
+[HKEY_CURRENT_USER\Software\Classes\SystemFileAssociations\.diff\shell\Open with md-v\command]
+@="\"C:\\Path\\To\\md-v.exe\" \"%1\""
+
+[HKEY_CURRENT_USER\Software\Classes\SystemFileAssociations\.patch\shell\Open with md-v]
+@="Open with md-v"
+"Icon"="C:\\Path\\To\\md-v.exe,0"
+[HKEY_CURRENT_USER\Software\Classes\SystemFileAssociations\.patch\shell\Open with md-v\command]
 @="\"C:\\Path\\To\\md-v.exe\" \"%1\""

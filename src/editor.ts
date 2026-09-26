@@ -1,7 +1,15 @@
 import { EditorView, keymap, lineNumbers, highlightActiveLine, highlightActiveLineGutter } from "@codemirror/view";
-import { markdown } from "@codemirror/lang-markdown";
 import { defaultKeymap, history, historyKeymap } from "@codemirror/commands";
-import { bracketMatching, syntaxHighlighting, defaultHighlightStyle, HighlightStyle } from "@codemirror/language";
+import {
+  bracketMatching,
+  syntaxHighlighting,
+  defaultHighlightStyle,
+  HighlightStyle,
+  codeFolding,
+  foldGutter,
+  foldKeymap,
+} from "@codemirror/language";
+import { Compartment, type Extension } from "@codemirror/state";
 import { tags } from "@lezer/highlight";
 
 const lightTheme = EditorView.theme(
@@ -43,6 +51,8 @@ export function createEditor(
   doc: string,
   dark: boolean,
   onDocChanged: (doc: string) => void,
+  langCompartment: Compartment,
+  initialLang: Extension,
 ): EditorView {
   return new EditorView({
     parent,
@@ -51,10 +61,12 @@ export function createEditor(
       lineNumbers(),
       highlightActiveLineGutter(),
       history(),
+      codeFolding(),
+      foldGutter(),
       bracketMatching(),
       highlightActiveLine(),
-      keymap.of([...defaultKeymap, ...historyKeymap]),
-      markdown(),
+      keymap.of([...defaultKeymap, ...historyKeymap, ...foldKeymap]),
+      langCompartment.of(initialLang),
       EditorView.lineWrapping,
       dark ? darkTheme : lightTheme,
       syntaxHighlighting(dark ? darkHighlight : defaultHighlightStyle),

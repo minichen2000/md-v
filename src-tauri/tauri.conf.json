@@ -34,6 +34,12 @@
         "name": "Markdown Document",
         "description": "Markdown Document",
         "role": "Viewer"
+      },
+      {
+        "ext": ["txt", "log", "json", "xml", "yaml", "yml", "toml", "ini", "conf", "sh", "py", "js", "ts", "html", "css", "sql", "rs", "c", "cpp", "h", "java", "php", "diff"],
+        "name": "Text Document",
+        "description": "Text Document",
+        "role": "Editor"
       }
     ],
     "icon": [

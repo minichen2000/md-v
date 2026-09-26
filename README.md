@@ -10,13 +10,14 @@ Built on **Tauri v2** (Rust + system WebView), the single portable exe is only ~
 ## Features
 
 - **Edit left, render right**: CodeMirror 6 source editor on the left (syntax highlighting, line numbers, word wrap), live rendering on the right, with a draggable split ratio that is remembered
+- **General text viewer/editor**: opening json / xml / yaml / toml / ini / sh / ps1 / py / js / ts / html / css / sql / rust / c / c++ / java / php / diff and other text files switches to per-extension syntax highlighting and code folding (language packs lazy-loaded from local resources, zero network), with the editor taking the full width — fully editable and savable
 - **Modern Markdown rendering**: pulldown-cmark parses GFM (tables / task lists / strikethrough / footnotes) on the Rust side, highlight.js for code highlighting, KaTeX for math, Mermaid for diagrams (lazy-loaded — zero overhead for documents without diagrams)
 - **Multi-tab**: open multiple files at once, unsaved tabs show ●, drag-and-drop to open files
 - **Synchronized scrolling**: proportional scroll sync between editor and preview, toggleable
 - **Outline TOC**: h1–h4 sidebar with click-to-jump and scroll-highlighted current section
 - **Export**: one-click export to standalone HTML (inlined styles and fonts, works offline) / PDF (system print)
 - **Personalization**: light/dark themes, font zoom (Ctrl+wheel), Chinese/English UI, settings persisted automatically
-- **System integration**: `.md` file association and Explorer context menu "Open with md-v" (one-click register/remove inside the app, no admin rights required)
+- **System integration**: `.md` file association and Explorer context menu "Open with md-v" (one-click register/remove inside the app, no admin rights required); other text extensions (.txt/.json/.py etc.) only get the context-menu entry without changing their default double-click app
 - **File guard**: prompts to reload when the file on disk is modified externally, preventing accidental overwrites
 
 ## Keyboard Shortcuts

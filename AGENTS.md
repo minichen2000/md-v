@@ -19,6 +19,8 @@
 ## 技术栈
 
 - Tauri 2 + Vite + TypeScript 前端（CodeMirror 6 编辑器）
+- 通用文本支持：`src/langs.ts` 按后缀识别语言，所有非 md 的 CodeMirror 语言包动态 import 懒加载（exe 内嵌资源，零网络）；非 md 文件为 plain 模式（无渲染区/TOC/导出，编辑区独占）
+- 右键注册：.md/.markdown 走 ProgID 完整关联；其它后缀只写 `HKCU\Software\Classes\SystemFileAssociations\.<ext>\shell\Open with md-v`，不动默认打开方式
 - 前端版本号由 `vite.config.ts` 的 `define.__APP_VERSION__` 从 `package.json` 注入
 - 单实例：`tauri-plugin-single-instance`，二次启动把文件路径发 `open-files` 事件给前端开新标签
 - 本机访问 github.com 依赖 hosts 条目 `140.82.112.3 github.com`（网络间歇性干扰，失败时重试即可）
