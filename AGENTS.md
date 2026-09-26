@@ -23,4 +23,3 @@
 - 右键注册：.md/.markdown 走 ProgID 完整关联；其它文件用 `HKCU\Software\Classes\*\shell\Open with md-v` 通配 verb（全文件生效，不动默认关联）；`LEGACY_EXTRA_EXTS` 仅用于卸载时清理旧版逐后缀注册
 - 前端版本号由 `vite.config.ts` 的 `define.__APP_VERSION__` 从 `package.json` 注入
 - 单实例：`tauri-plugin-single-instance`，二次启动把文件路径发 `open-files` 事件给前端开新标签
-- 本机访问 github.com 依赖 hosts 条目 `140.82.112.3 github.com`（网络间歇性干扰，失败时重试即可）
