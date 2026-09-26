@@ -136,8 +136,28 @@ function buildPdfToc(body: HTMLElement): string {
     const level = Number(h.tagName[1]);
     return `<div class="toc-l${level}"><a href="#${h.id}">${escapeHtml(h.textContent ?? "")}</a></div>`;
   });
-  return `<nav id="pdf-toc"><h1>${escapeHtml(t("pdfTocTitle"))}</h1>\n${items.join("\n")}</nav>`;
+  return `<div class="toc-title">${escapeHtml(t("pdfTocTitle"))}</div>\n<nav id="pdf-toc">\n${items.join("\n")}\n</nav>`;
 }
+
+const PDF_LAYOUT_CSS = [
+  ":root{--font-size:FONT_SIZEpx}",
+  "html,body{height:auto;overflow:visible}",
+  "@page{size:A4;margin:18mm}",
+  "#preview-pane{max-width:900px;margin:0 auto;overflow:visible}",
+  // cover: big document title + TOC, ends with a page break
+  "#pdf-cover{page-break-after:always;max-width:900px;margin:0 auto}",
+  ".doc-title{font-size:2.4em;font-weight:700;text-align:center;margin:70px 0 10px;line-height:1.3}",
+  ".toc-title{font-size:1.35em;font-weight:600;margin:60px 0 14px;padding-bottom:8px;border-bottom:1px solid var(--border)}",
+  // TOC entries: blue = obviously clickable, indented per heading level
+  "#pdf-toc a{color:var(--accent);text-decoration:none}",
+  "#pdf-toc div{padding:3px 0;line-height:1.5}",
+  ".toc-l1{font-weight:600;font-size:1.05em;margin-top:8px}",
+  ".toc-l2{padding-left:24px}",
+  ".toc-l3{padding-left:48px;font-size:0.95em}",
+  ".toc-l4{padding-left:72px;font-size:0.9em}",
+  ".toc-l5{padding-left:96px;font-size:0.9em}",
+  ".toc-l6{padding-left:120px;font-size:0.9em}",
+].join("");
 
 export async function exportPdfToc(
   title: string,
@@ -157,6 +177,8 @@ export async function exportPdfToc(
   const body = previewEl.cloneNode(true) as HTMLElement;
   await inlineImages(body);
   const tocHtml = buildPdfToc(body);
+  const titleHtml = `<div class="doc-title">${escapeHtml(title)}</div>`;
+  const cover = tocHtml ? `<div id="pdf-cover">\n${titleHtml}\n${tocHtml}\n</div>` : titleHtml;
   const html = [
     "<!doctype html>",
     `<html lang="${document.documentElement.lang}">`,
@@ -164,10 +186,10 @@ export async function exportPdfToc(
     '<meta charset="utf-8" />',
     `<title>${escapeHtml(title)}</title>`,
     `<style>${css}</style>`,
-    `<style>:root{--font-size:${fontSize}px}html,body{height:auto;overflow:visible}#preview-pane{max-width:900px;margin:0 auto;overflow:visible}@page{size:A4;margin:18mm}#pdf-toc{page-break-after:always;max-width:900px;margin:0 auto}#pdf-toc div{padding:2px 0}#pdf-toc a{color:inherit;text-decoration:none}.toc-l1{font-weight:600}.toc-l2{padding-left:16px}.toc-l3{padding-left:32px}.toc-l4{padding-left:48px}.toc-l5{padding-left:64px}.toc-l6{padding-left:80px}</style>`,
+    `<style>${PDF_LAYOUT_CSS.replace("FONT_SIZE", String(fontSize))}</style>`,
     "</head>",
     `<body class="${dark ? "dark" : ""}">`,
-    tocHtml,
+    cover,
     `<div id="preview-pane">${body.innerHTML}</div>`,
     "</body></html>",
   ].join("\n");
