@@ -4,6 +4,7 @@ import { listen } from "@tauri-apps/api/event";
 import { open, save, ask } from "@tauri-apps/plugin-dialog";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import { Compartment } from "@codemirror/state";
+import { undo, redo } from "@codemirror/commands";
 import { markdown } from "@codemirror/lang-markdown";
 import { loadSettings, saveSettings, type Settings } from "./settings";
 import { t, setLang, getLang } from "./i18n";
@@ -108,7 +109,7 @@ function onMenuOutside(e: Event): void {
   if (menuEl && !menuEl.contains(e.target as Node)) closeMenu();
 }
 
-function showMenu(anchor: HTMLElement, entries: MenuEntry[]): void {
+function openMenu(entries: MenuEntry[]): void {
   closeMenu();
   menuEl = document.createElement("div");
   menuEl.className = "menu";
@@ -132,10 +133,20 @@ function showMenu(anchor: HTMLElement, entries: MenuEntry[]): void {
     menuEl.appendChild(item);
   }
   document.body.appendChild(menuEl);
-  const r = anchor.getBoundingClientRect();
-  menuEl.style.top = `${r.bottom + 4}px`;
-  menuEl.style.left = `${Math.min(r.left, window.innerWidth - menuEl.offsetWidth - 8)}px`;
   window.addEventListener("mousedown", onMenuOutside, true);
+}
+
+function showMenu(anchor: HTMLElement, entries: MenuEntry[]): void {
+  openMenu(entries);
+  const r = anchor.getBoundingClientRect();
+  menuEl!.style.top = `${r.bottom + 4}px`;
+  menuEl!.style.left = `${Math.min(r.left, window.innerWidth - menuEl!.offsetWidth - 8)}px`;
+}
+
+function showMenuAt(x: number, y: number, entries: MenuEntry[]): void {
+  openMenu(entries);
+  menuEl!.style.top = `${Math.min(y, window.innerHeight - menuEl!.offsetHeight - 8)}px`;
+  menuEl!.style.left = `${Math.min(x, window.innerWidth - menuEl!.offsetWidth - 8)}px`;
 }
 
 /* ---- settings / layout ---- */
@@ -572,6 +583,109 @@ function showExportMenu(): void {
   ]);
 }
 
+/* ---- right-click context menus ---- */
+
+async function copyText(text: string): Promise<void> {
+  try {
+    await navigator.clipboard.writeText(text);
+  } catch {
+    // clipboard API unavailable; ignore
+  }
+}
+
+function showPreviewContextMenu(x: number, y: number, pane: HTMLElement): void {
+  const selText = window.getSelection()?.toString() ?? "";
+  showMenuAt(x, y, [
+    {
+      label: t("copy"),
+      disabled: selText === "",
+      onClick: () => void copyText(selText),
+    },
+    {
+      label: t("selectAll"),
+      onClick: () => {
+        const sel = window.getSelection();
+        if (!sel) return;
+        const range = document.createRange();
+        range.selectNodeContents(pane);
+        sel.removeAllRanges();
+        sel.addRange(range);
+      },
+    },
+    "sep",
+    { label: t("rerender"), onClick: () => void renderActivePreview() },
+  ]);
+}
+
+function showEditorContextMenu(x: number, y: number): void {
+  const view = editorView;
+  if (!view) return;
+  const sel = view.state.selection.main;
+  const selText = view.state.sliceDoc(sel.from, sel.to);
+  showMenuAt(x, y, [
+    {
+      label: t("undo"),
+      onClick: () => {
+        if (editorView) {
+          undo(editorView);
+          editorView.focus();
+        }
+      },
+    },
+    {
+      label: t("redo"),
+      onClick: () => {
+        if (editorView) {
+          redo(editorView);
+          editorView.focus();
+        }
+      },
+    },
+    "sep",
+    {
+      label: t("cut"),
+      disabled: sel.empty,
+      onClick: () => {
+        if (!editorView) return;
+        void copyText(selText);
+        editorView.dispatch({ changes: { from: sel.from, to: sel.to } });
+        editorView.focus();
+      },
+    },
+    {
+      label: t("copy"),
+      disabled: sel.empty,
+      onClick: () => void copyText(selText),
+    },
+    {
+      label: t("paste"),
+      onClick: () => {
+        void (async () => {
+          if (!editorView) return;
+          try {
+            const text = await navigator.clipboard.readText();
+            if (text) {
+              editorView.dispatch(editorView.state.replaceSelection(text));
+              editorView.focus();
+            }
+          } catch {
+            // clipboard API unavailable; ignore
+          }
+        })();
+      },
+    },
+    "sep",
+    {
+      label: t("selectAll"),
+      onClick: () => {
+        if (!editorView) return;
+        editorView.dispatch({ selection: { anchor: 0, head: editorView.state.doc.length } });
+        editorView.focus();
+      },
+    },
+  ]);
+}
+
 function showAbout(): void {
   const overlay = document.createElement("div");
   overlay.id = "about-overlay";
@@ -655,8 +769,14 @@ function wireEvents(): void {
   store.onClose = closeTab;
   store.onNew = newTab;
 
-  // suppress the WebView2 default context menu — its items (refresh, share, …) don't work in-app
-  window.addEventListener("contextmenu", (e) => e.preventDefault());
+  // suppress the WebView2 default context menu; show our own instead
+  window.addEventListener("contextmenu", (e) => {
+    e.preventDefault();
+    const target = e.target as HTMLElement;
+    const pane = target.closest("#preview-pane, #toc") as HTMLElement | null;
+    if (pane) showPreviewContextMenu(e.clientX, e.clientY, pane);
+    else if (target.closest("#editor-pane")) showEditorContextMenu(e.clientX, e.clientY);
+  });
 
   $("#btn-open").addEventListener("click", () => void openDialog());
   $("#btn-recent").addEventListener("click", () => showRecentMenu());
