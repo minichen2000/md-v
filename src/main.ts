@@ -655,6 +655,9 @@ function wireEvents(): void {
   store.onClose = closeTab;
   store.onNew = newTab;
 
+  // suppress the WebView2 default context menu — its items (refresh, share, …) don't work in-app
+  window.addEventListener("contextmenu", (e) => e.preventDefault());
+
   $("#btn-open").addEventListener("click", () => void openDialog());
   $("#btn-recent").addEventListener("click", () => showRecentMenu());
   $("#btn-save").addEventListener("click", () => void saveActive());
