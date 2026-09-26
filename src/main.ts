@@ -27,6 +27,10 @@ let toc: TocController;
 
 const SESSION_KEY = "md-v-session";
 
+// Above this size the editor switches to lightweight mode: no syntax parsing,
+// folding, bracket matching or active-line highlight, so huge files scroll smoothly.
+const LARGE_FILE_CHARS = 1_000_000;
+
 const $ = <T extends HTMLElement>(sel: string): T => document.querySelector(sel) as T;
 
 function buildLayout(): void {
@@ -157,11 +161,16 @@ function plainMode(): boolean {
 }
 
 function updateLayoutMode(): void {
+  const tab = store.active();
   const plain = plainMode();
   $("#toc").style.display = tocVisible() ? "block" : "none";
-  $("#splitter").style.display = plain ? "none" : "block";
-  $("#preview-pane").style.display = plain ? "none" : "block";
-  $("#workspace").style.gridTemplateColumns = plain ? "1fr" : gridColumns();
+  if (tab) {
+    $("#splitter").style.display = plain ? "none" : "block";
+    $("#preview-pane").style.display = plain ? "none" : "block";
+    $("#workspace").style.gridTemplateColumns = plain ? "1fr" : gridColumns();
+  } else {
+    $("#workspace").style.gridTemplateColumns = "1fr";
+  }
   for (const id of ["#btn-toc", "#btn-sync", "#btn-export"]) {
     const btn = $(id) as HTMLButtonElement;
     btn.disabled = plain;
@@ -212,6 +221,7 @@ function mountEditor(tab: Tab): void {
   const pane = $("#editor-pane");
   pane.innerHTML = "";
   const langId = langForPath(tab.path);
+  const lightweight = tab.doc.length > LARGE_FILE_CHARS;
   const langComp = new Compartment();
   editorView = createEditor(
     pane,
@@ -228,8 +238,9 @@ function mountEditor(tab: Tab): void {
     },
     langComp,
     langId === "markdown" ? markdown() : [],
+    lightweight,
   );
-  if (langId !== "markdown") {
+  if (langId !== "markdown" && !lightweight) {
     const view = editorView;
     loadLanguage(langId)
       .then((ext) => {
@@ -286,7 +297,8 @@ function updateStatus(): void {
   pathEl.title = tab.path ?? "";
   const lines = tab.doc === "" ? 0 : tab.doc.split("\n").length;
   const langName = langDisplayName(langForPath(tab.path));
-  statsEl.textContent = `${tab.doc.length} ${t("statusChars")} · ${lines} ${t("statusLines")} · ${langName}`;
+  const large = tab.doc.length > LARGE_FILE_CHARS ? ` · ${t("largeFileMode")}` : "";
+  statsEl.textContent = `${tab.doc.length} ${t("statusChars")} · ${lines} ${t("statusLines")} · ${langName}${large}`;
 }
 
 /* ---- session persistence (restore tabs) ---- */
@@ -494,6 +506,7 @@ async function checkExternal(tab: Tab): Promise<void> {
 type Pane = "editor" | "preview";
 let scrollSource: Pane | null = null;
 let scrollStamp = 0;
+let scrollRaf = 0;
 
 function markSource(pane: Pane): void {
   scrollSource = pane;
@@ -506,13 +519,17 @@ function handlePaneScroll(pane: Pane): void {
   const now = performance.now();
   if (scrollSource !== pane && now - scrollStamp < 300) return; // follower side: ignore
   markSource(pane);
-  if (!editorView) return;
-  const editorScroller = editorView.scrollDOM;
-  const preview = $("#preview-pane");
-  const [from, to] = pane === "editor" ? [editorScroller, preview] : [preview, editorScroller];
-  const max = from.scrollHeight - from.clientHeight;
-  const ratio = max > 0 ? from.scrollTop / max : 0;
-  to.scrollTop = ratio * Math.max(0, to.scrollHeight - to.clientHeight);
+  if (!editorView || scrollRaf) return;
+  scrollRaf = requestAnimationFrame(() => {
+    scrollRaf = 0;
+    if (!editorView) return;
+    const editorScroller = editorView.scrollDOM;
+    const preview = $("#preview-pane");
+    const [from, to] = pane === "editor" ? [editorScroller, preview] : [preview, editorScroller];
+    const max = from.scrollHeight - from.clientHeight;
+    const ratio = max > 0 ? from.scrollTop / max : 0;
+    to.scrollTop = ratio * Math.max(0, to.scrollHeight - to.clientHeight);
+  });
 }
 
 /* ---- menus / export ---- */

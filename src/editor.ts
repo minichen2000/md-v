@@ -53,20 +53,26 @@ export function createEditor(
   onDocChanged: (doc: string) => void,
   langCompartment: Compartment,
   initialLang: Extension,
+  lightweight = false,
 ): EditorView {
+  const rich = lightweight
+    ? []
+    : [
+        highlightActiveLineGutter(),
+        codeFolding(),
+        foldGutter(),
+        bracketMatching(),
+        highlightActiveLine(),
+      ];
   return new EditorView({
     parent,
     doc,
     extensions: [
       lineNumbers(),
-      highlightActiveLineGutter(),
       history(),
-      codeFolding(),
-      foldGutter(),
-      bracketMatching(),
-      highlightActiveLine(),
+      ...rich,
       keymap.of([...defaultKeymap, ...historyKeymap, ...foldKeymap]),
-      langCompartment.of(initialLang),
+      langCompartment.of(lightweight ? [] : initialLang),
       EditorView.lineWrapping,
       dark ? darkTheme : lightTheme,
       syntaxHighlighting(dark ? darkHighlight : defaultHighlightStyle),
