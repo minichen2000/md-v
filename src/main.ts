@@ -27,10 +27,6 @@ let toc: TocController;
 
 const SESSION_KEY = "md-v-session";
 
-// Above this size the editor switches to lightweight mode: no syntax parsing,
-// folding, bracket matching or active-line highlight, so huge files scroll smoothly.
-const LARGE_FILE_CHARS = 1_000_000;
-
 const $ = <T extends HTMLElement>(sel: string): T => document.querySelector(sel) as T;
 
 function buildLayout(): void {
@@ -221,7 +217,6 @@ function mountEditor(tab: Tab): void {
   const pane = $("#editor-pane");
   pane.innerHTML = "";
   const langId = langForPath(tab.path);
-  const lightweight = tab.doc.length > LARGE_FILE_CHARS;
   const langComp = new Compartment();
   editorView = createEditor(
     pane,
@@ -238,9 +233,8 @@ function mountEditor(tab: Tab): void {
     },
     langComp,
     langId === "markdown" ? markdown() : [],
-    lightweight,
   );
-  if (langId !== "markdown" && !lightweight) {
+  if (langId !== "markdown") {
     const view = editorView;
     loadLanguage(langId)
       .then((ext) => {
@@ -297,8 +291,7 @@ function updateStatus(): void {
   pathEl.title = tab.path ?? "";
   const lines = tab.doc === "" ? 0 : tab.doc.split("\n").length;
   const langName = langDisplayName(langForPath(tab.path));
-  const large = tab.doc.length > LARGE_FILE_CHARS ? ` · ${t("largeFileMode")}` : "";
-  statsEl.textContent = `${tab.doc.length} ${t("statusChars")} · ${lines} ${t("statusLines")} · ${langName}${large}`;
+  statsEl.textContent = `${tab.doc.length} ${t("statusChars")} · ${lines} ${t("statusLines")} · ${langName}`;
 }
 
 /* ---- session persistence (restore tabs) ---- */
