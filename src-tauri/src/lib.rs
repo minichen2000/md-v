@@ -53,10 +53,19 @@ const PROG_ID: &str = "md-v.md";
 
 // Extensions that only get an "Open with md-v" verb (via SystemFileAssociations),
 // without touching their default double-click association.
-const EXTRA_EXTS: [&str; 29] = [
-    "txt", "log", "json", "jsonc", "xml", "yaml", "yml", "toml", "ini", "conf", "cfg", "sh", "ps1",
-    "py", "pyw", "js", "ts", "html", "htm", "css", "sql", "rs", "c", "cpp", "h", "java", "php",
-    "diff", "patch",
+const EXTRA_EXTS: &[&str] = &[
+    "txt", "log", "text", "csv",
+    "mdown", "mkd",
+    "json", "jsonc", "xml", "xsl", "svg", "xhtml",
+    "yaml", "yml", "toml",
+    "ini", "conf", "cfg", "properties",
+    "sh", "bash", "zsh", "ksh", "ps1", "psm1",
+    "py", "pyw",
+    "js", "mjs", "cjs", "jsx", "ts", "tsx", "mts", "cts",
+    "html", "htm", "css", "scss", "less",
+    "sql", "rs", "c", "h", "cc", "cpp", "cxx", "hpp",
+    "java", "php", "diff", "patch",
+    "lua", "rb", "pl", "nginx",
 ];
 
 #[tauri::command]

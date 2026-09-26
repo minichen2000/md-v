@@ -55,6 +55,30 @@ Windows Registry Editor Version 5.00
 [HKEY_CURRENT_USER\Software\Classes\SystemFileAssociations\.log\shell\Open with md-v\command]
 @="\"C:\\Path\\To\\md-v.exe\" \"%1\""
 
+[HKEY_CURRENT_USER\Software\Classes\SystemFileAssociations\.text\shell\Open with md-v]
+@="Open with md-v"
+"Icon"="C:\\Path\\To\\md-v.exe,0"
+[HKEY_CURRENT_USER\Software\Classes\SystemFileAssociations\.text\shell\Open with md-v\command]
+@="\"C:\\Path\\To\\md-v.exe\" \"%1\""
+
+[HKEY_CURRENT_USER\Software\Classes\SystemFileAssociations\.csv\shell\Open with md-v]
+@="Open with md-v"
+"Icon"="C:\\Path\\To\\md-v.exe,0"
+[HKEY_CURRENT_USER\Software\Classes\SystemFileAssociations\.csv\shell\Open with md-v\command]
+@="\"C:\\Path\\To\\md-v.exe\" \"%1\""
+
+[HKEY_CURRENT_USER\Software\Classes\SystemFileAssociations\.mdown\shell\Open with md-v]
+@="Open with md-v"
+"Icon"="C:\\Path\\To\\md-v.exe,0"
+[HKEY_CURRENT_USER\Software\Classes\SystemFileAssociations\.mdown\shell\Open with md-v\command]
+@="\"C:\\Path\\To\\md-v.exe\" \"%1\""
+
+[HKEY_CURRENT_USER\Software\Classes\SystemFileAssociations\.mkd\shell\Open with md-v]
+@="Open with md-v"
+"Icon"="C:\\Path\\To\\md-v.exe,0"
+[HKEY_CURRENT_USER\Software\Classes\SystemFileAssociations\.mkd\shell\Open with md-v\command]
+@="\"C:\\Path\\To\\md-v.exe\" \"%1\""
+
 [HKEY_CURRENT_USER\Software\Classes\SystemFileAssociations\.json\shell\Open with md-v]
 @="Open with md-v"
 "Icon"="C:\\Path\\To\\md-v.exe,0"
@@ -71,6 +95,24 @@ Windows Registry Editor Version 5.00
 @="Open with md-v"
 "Icon"="C:\\Path\\To\\md-v.exe,0"
 [HKEY_CURRENT_USER\Software\Classes\SystemFileAssociations\.xml\shell\Open with md-v\command]
+@="\"C:\\Path\\To\\md-v.exe\" \"%1\""
+
+[HKEY_CURRENT_USER\Software\Classes\SystemFileAssociations\.xsl\shell\Open with md-v]
+@="Open with md-v"
+"Icon"="C:\\Path\\To\\md-v.exe,0"
+[HKEY_CURRENT_USER\Software\Classes\SystemFileAssociations\.xsl\shell\Open with md-v\command]
+@="\"C:\\Path\\To\\md-v.exe\" \"%1\""
+
+[HKEY_CURRENT_USER\Software\Classes\SystemFileAssociations\.svg\shell\Open with md-v]
+@="Open with md-v"
+"Icon"="C:\\Path\\To\\md-v.exe,0"
+[HKEY_CURRENT_USER\Software\Classes\SystemFileAssociations\.svg\shell\Open with md-v\command]
+@="\"C:\\Path\\To\\md-v.exe\" \"%1\""
+
+[HKEY_CURRENT_USER\Software\Classes\SystemFileAssociations\.xhtml\shell\Open with md-v]
+@="Open with md-v"
+"Icon"="C:\\Path\\To\\md-v.exe,0"
+[HKEY_CURRENT_USER\Software\Classes\SystemFileAssociations\.xhtml\shell\Open with md-v\command]
 @="\"C:\\Path\\To\\md-v.exe\" \"%1\""
 
 [HKEY_CURRENT_USER\Software\Classes\SystemFileAssociations\.yaml\shell\Open with md-v]
@@ -109,16 +151,46 @@ Windows Registry Editor Version 5.00
 [HKEY_CURRENT_USER\Software\Classes\SystemFileAssociations\.cfg\shell\Open with md-v\command]
 @="\"C:\\Path\\To\\md-v.exe\" \"%1\""
 
+[HKEY_CURRENT_USER\Software\Classes\SystemFileAssociations\.properties\shell\Open with md-v]
+@="Open with md-v"
+"Icon"="C:\\Path\\To\\md-v.exe,0"
+[HKEY_CURRENT_USER\Software\Classes\SystemFileAssociations\.properties\shell\Open with md-v\command]
+@="\"C:\\Path\\To\\md-v.exe\" \"%1\""
+
 [HKEY_CURRENT_USER\Software\Classes\SystemFileAssociations\.sh\shell\Open with md-v]
 @="Open with md-v"
 "Icon"="C:\\Path\\To\\md-v.exe,0"
 [HKEY_CURRENT_USER\Software\Classes\SystemFileAssociations\.sh\shell\Open with md-v\command]
 @="\"C:\\Path\\To\\md-v.exe\" \"%1\""
 
+[HKEY_CURRENT_USER\Software\Classes\SystemFileAssociations\.bash\shell\Open with md-v]
+@="Open with md-v"
+"Icon"="C:\\Path\\To\\md-v.exe,0"
+[HKEY_CURRENT_USER\Software\Classes\SystemFileAssociations\.bash\shell\Open with md-v\command]
+@="\"C:\\Path\\To\\md-v.exe\" \"%1\""
+
+[HKEY_CURRENT_USER\Software\Classes\SystemFileAssociations\.zsh\shell\Open with md-v]
+@="Open with md-v"
+"Icon"="C:\\Path\\To\\md-v.exe,0"
+[HKEY_CURRENT_USER\Software\Classes\SystemFileAssociations\.zsh\shell\Open with md-v\command]
+@="\"C:\\Path\\To\\md-v.exe\" \"%1\""
+
+[HKEY_CURRENT_USER\Software\Classes\SystemFileAssociations\.ksh\shell\Open with md-v]
+@="Open with md-v"
+"Icon"="C:\\Path\\To\\md-v.exe,0"
+[HKEY_CURRENT_USER\Software\Classes\SystemFileAssociations\.ksh\shell\Open with md-v\command]
+@="\"C:\\Path\\To\\md-v.exe\" \"%1\""
+
 [HKEY_CURRENT_USER\Software\Classes\SystemFileAssociations\.ps1\shell\Open with md-v]
 @="Open with md-v"
 "Icon"="C:\\Path\\To\\md-v.exe,0"
 [HKEY_CURRENT_USER\Software\Classes\SystemFileAssociations\.ps1\shell\Open with md-v\command]
+@="\"C:\\Path\\To\\md-v.exe\" \"%1\""
+
+[HKEY_CURRENT_USER\Software\Classes\SystemFileAssociations\.psm1\shell\Open with md-v]
+@="Open with md-v"
+"Icon"="C:\\Path\\To\\md-v.exe,0"
+[HKEY_CURRENT_USER\Software\Classes\SystemFileAssociations\.psm1\shell\Open with md-v\command]
 @="\"C:\\Path\\To\\md-v.exe\" \"%1\""
 
 [HKEY_CURRENT_USER\Software\Classes\SystemFileAssociations\.py\shell\Open with md-v]
@@ -139,10 +211,46 @@ Windows Registry Editor Version 5.00
 [HKEY_CURRENT_USER\Software\Classes\SystemFileAssociations\.js\shell\Open with md-v\command]
 @="\"C:\\Path\\To\\md-v.exe\" \"%1\""
 
+[HKEY_CURRENT_USER\Software\Classes\SystemFileAssociations\.mjs\shell\Open with md-v]
+@="Open with md-v"
+"Icon"="C:\\Path\\To\\md-v.exe,0"
+[HKEY_CURRENT_USER\Software\Classes\SystemFileAssociations\.mjs\shell\Open with md-v\command]
+@="\"C:\\Path\\To\\md-v.exe\" \"%1\""
+
+[HKEY_CURRENT_USER\Software\Classes\SystemFileAssociations\.cjs\shell\Open with md-v]
+@="Open with md-v"
+"Icon"="C:\\Path\\To\\md-v.exe,0"
+[HKEY_CURRENT_USER\Software\Classes\SystemFileAssociations\.cjs\shell\Open with md-v\command]
+@="\"C:\\Path\\To\\md-v.exe\" \"%1\""
+
+[HKEY_CURRENT_USER\Software\Classes\SystemFileAssociations\.jsx\shell\Open with md-v]
+@="Open with md-v"
+"Icon"="C:\\Path\\To\\md-v.exe,0"
+[HKEY_CURRENT_USER\Software\Classes\SystemFileAssociations\.jsx\shell\Open with md-v\command]
+@="\"C:\\Path\\To\\md-v.exe\" \"%1\""
+
 [HKEY_CURRENT_USER\Software\Classes\SystemFileAssociations\.ts\shell\Open with md-v]
 @="Open with md-v"
 "Icon"="C:\\Path\\To\\md-v.exe,0"
 [HKEY_CURRENT_USER\Software\Classes\SystemFileAssociations\.ts\shell\Open with md-v\command]
+@="\"C:\\Path\\To\\md-v.exe\" \"%1\""
+
+[HKEY_CURRENT_USER\Software\Classes\SystemFileAssociations\.tsx\shell\Open with md-v]
+@="Open with md-v"
+"Icon"="C:\\Path\\To\\md-v.exe,0"
+[HKEY_CURRENT_USER\Software\Classes\SystemFileAssociations\.tsx\shell\Open with md-v\command]
+@="\"C:\\Path\\To\\md-v.exe\" \"%1\""
+
+[HKEY_CURRENT_USER\Software\Classes\SystemFileAssociations\.mts\shell\Open with md-v]
+@="Open with md-v"
+"Icon"="C:\\Path\\To\\md-v.exe,0"
+[HKEY_CURRENT_USER\Software\Classes\SystemFileAssociations\.mts\shell\Open with md-v\command]
+@="\"C:\\Path\\To\\md-v.exe\" \"%1\""
+
+[HKEY_CURRENT_USER\Software\Classes\SystemFileAssociations\.cts\shell\Open with md-v]
+@="Open with md-v"
+"Icon"="C:\\Path\\To\\md-v.exe,0"
+[HKEY_CURRENT_USER\Software\Classes\SystemFileAssociations\.cts\shell\Open with md-v\command]
 @="\"C:\\Path\\To\\md-v.exe\" \"%1\""
 
 [HKEY_CURRENT_USER\Software\Classes\SystemFileAssociations\.html\shell\Open with md-v]
@@ -163,6 +271,18 @@ Windows Registry Editor Version 5.00
 [HKEY_CURRENT_USER\Software\Classes\SystemFileAssociations\.css\shell\Open with md-v\command]
 @="\"C:\\Path\\To\\md-v.exe\" \"%1\""
 
+[HKEY_CURRENT_USER\Software\Classes\SystemFileAssociations\.scss\shell\Open with md-v]
+@="Open with md-v"
+"Icon"="C:\\Path\\To\\md-v.exe,0"
+[HKEY_CURRENT_USER\Software\Classes\SystemFileAssociations\.scss\shell\Open with md-v\command]
+@="\"C:\\Path\\To\\md-v.exe\" \"%1\""
+
+[HKEY_CURRENT_USER\Software\Classes\SystemFileAssociations\.less\shell\Open with md-v]
+@="Open with md-v"
+"Icon"="C:\\Path\\To\\md-v.exe,0"
+[HKEY_CURRENT_USER\Software\Classes\SystemFileAssociations\.less\shell\Open with md-v\command]
+@="\"C:\\Path\\To\\md-v.exe\" \"%1\""
+
 [HKEY_CURRENT_USER\Software\Classes\SystemFileAssociations\.sql\shell\Open with md-v]
 @="Open with md-v"
 "Icon"="C:\\Path\\To\\md-v.exe,0"
@@ -181,16 +301,34 @@ Windows Registry Editor Version 5.00
 [HKEY_CURRENT_USER\Software\Classes\SystemFileAssociations\.c\shell\Open with md-v\command]
 @="\"C:\\Path\\To\\md-v.exe\" \"%1\""
 
+[HKEY_CURRENT_USER\Software\Classes\SystemFileAssociations\.h\shell\Open with md-v]
+@="Open with md-v"
+"Icon"="C:\\Path\\To\\md-v.exe,0"
+[HKEY_CURRENT_USER\Software\Classes\SystemFileAssociations\.h\shell\Open with md-v\command]
+@="\"C:\\Path\\To\\md-v.exe\" \"%1\""
+
+[HKEY_CURRENT_USER\Software\Classes\SystemFileAssociations\.cc\shell\Open with md-v]
+@="Open with md-v"
+"Icon"="C:\\Path\\To\\md-v.exe,0"
+[HKEY_CURRENT_USER\Software\Classes\SystemFileAssociations\.cc\shell\Open with md-v\command]
+@="\"C:\\Path\\To\\md-v.exe\" \"%1\""
+
 [HKEY_CURRENT_USER\Software\Classes\SystemFileAssociations\.cpp\shell\Open with md-v]
 @="Open with md-v"
 "Icon"="C:\\Path\\To\\md-v.exe,0"
 [HKEY_CURRENT_USER\Software\Classes\SystemFileAssociations\.cpp\shell\Open with md-v\command]
 @="\"C:\\Path\\To\\md-v.exe\" \"%1\""
 
-[HKEY_CURRENT_USER\Software\Classes\SystemFileAssociations\.h\shell\Open with md-v]
+[HKEY_CURRENT_USER\Software\Classes\SystemFileAssociations\.cxx\shell\Open with md-v]
 @="Open with md-v"
 "Icon"="C:\\Path\\To\\md-v.exe,0"
-[HKEY_CURRENT_USER\Software\Classes\SystemFileAssociations\.h\shell\Open with md-v\command]
+[HKEY_CURRENT_USER\Software\Classes\SystemFileAssociations\.cxx\shell\Open with md-v\command]
+@="\"C:\\Path\\To\\md-v.exe\" \"%1\""
+
+[HKEY_CURRENT_USER\Software\Classes\SystemFileAssociations\.hpp\shell\Open with md-v]
+@="Open with md-v"
+"Icon"="C:\\Path\\To\\md-v.exe,0"
+[HKEY_CURRENT_USER\Software\Classes\SystemFileAssociations\.hpp\shell\Open with md-v\command]
 @="\"C:\\Path\\To\\md-v.exe\" \"%1\""
 
 [HKEY_CURRENT_USER\Software\Classes\SystemFileAssociations\.java\shell\Open with md-v]
@@ -216,3 +354,28 @@ Windows Registry Editor Version 5.00
 "Icon"="C:\\Path\\To\\md-v.exe,0"
 [HKEY_CURRENT_USER\Software\Classes\SystemFileAssociations\.patch\shell\Open with md-v\command]
 @="\"C:\\Path\\To\\md-v.exe\" \"%1\""
+
+[HKEY_CURRENT_USER\Software\Classes\SystemFileAssociations\.lua\shell\Open with md-v]
+@="Open with md-v"
+"Icon"="C:\\Path\\To\\md-v.exe,0"
+[HKEY_CURRENT_USER\Software\Classes\SystemFileAssociations\.lua\shell\Open with md-v\command]
+@="\"C:\\Path\\To\\md-v.exe\" \"%1\""
+
+[HKEY_CURRENT_USER\Software\Classes\SystemFileAssociations\.rb\shell\Open with md-v]
+@="Open with md-v"
+"Icon"="C:\\Path\\To\\md-v.exe,0"
+[HKEY_CURRENT_USER\Software\Classes\SystemFileAssociations\.rb\shell\Open with md-v\command]
+@="\"C:\\Path\\To\\md-v.exe\" \"%1\""
+
+[HKEY_CURRENT_USER\Software\Classes\SystemFileAssociations\.pl\shell\Open with md-v]
+@="Open with md-v"
+"Icon"="C:\\Path\\To\\md-v.exe,0"
+[HKEY_CURRENT_USER\Software\Classes\SystemFileAssociations\.pl\shell\Open with md-v\command]
+@="\"C:\\Path\\To\\md-v.exe\" \"%1\""
+
+[HKEY_CURRENT_USER\Software\Classes\SystemFileAssociations\.nginx\shell\Open with md-v]
+@="Open with md-v"
+"Icon"="C:\\Path\\To\\md-v.exe,0"
+[HKEY_CURRENT_USER\Software\Classes\SystemFileAssociations\.nginx\shell\Open with md-v\command]
+@="\"C:\\Path\\To\\md-v.exe\" \"%1\""
+

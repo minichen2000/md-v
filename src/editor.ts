@@ -36,6 +36,7 @@ const darkTheme = EditorView.theme(
   { dark: true },
 );
 
+// GitHub-dark-flavored palette covering all languages, not just Markdown.
 const darkHighlight = HighlightStyle.define([
   { tag: tags.heading, color: "#79c0ff", fontWeight: "bold" },
   { tag: tags.emphasis, fontStyle: "italic" },
@@ -43,7 +44,26 @@ const darkHighlight = HighlightStyle.define([
   { tag: tags.link, color: "#a5d6ff" },
   { tag: tags.monospace, color: "#a5d6ff" },
   { tag: tags.quote, color: "#8b949e" },
-  { tag: tags.processingInstruction, color: "#8b949e" },
+  { tag: [tags.comment, tags.blockComment, tags.lineComment, tags.docComment], color: "#8b949e", fontStyle: "italic" },
+  { tag: [tags.keyword, tags.controlKeyword, tags.moduleKeyword, tags.definitionKeyword, tags.operatorKeyword, tags.self, tags.controlOperator], color: "#ff7b72" },
+  { tag: [tags.string, tags.special(tags.string), tags.regexp, tags.escape, tags.character], color: "#a5d6ff" },
+  { tag: [tags.number, tags.integer, tags.float, tags.bool, tags.null, tags.atom, tags.unit], color: "#79c0ff" },
+  { tag: [tags.function(tags.variableName), tags.function(tags.propertyName), tags.macroName], color: "#d2a8ff" },
+  { tag: tags.propertyName, color: "#79c0ff" },
+  { tag: [tags.attributeName, tags.labelName], color: "#79c0ff" },
+  { tag: [tags.typeName, tags.className, tags.namespace], color: "#ffa657" },
+  { tag: tags.tagName, color: "#7ee787" },
+  { tag: tags.attributeValue, color: "#a5d6ff" },
+  { tag: [tags.definition(tags.variableName), tags.function(tags.definition(tags.variableName))], color: "#e6edf3" },
+  { tag: [tags.operator, tags.compareOperator, tags.arithmeticOperator, tags.logicOperator, tags.bitwiseOperator], color: "#ff7b72" },
+  { tag: [tags.punctuation, tags.separator, tags.squareBracket, tags.paren, tags.brace, tags.angleBracket], color: "#c9d1d9" },
+  { tag: [tags.meta, tags.processingInstruction, tags.annotation], color: "#8b949e" },
+  { tag: tags.url, color: "#a5d6ff", textDecoration: "underline" },
+  { tag: tags.inserted, color: "#7ee787" },
+  { tag: tags.deleted, color: "#ff7b72" },
+  { tag: tags.changed, color: "#79c0ff" },
+  { tag: tags.invalid, color: "#f85149" },
+  { tag: tags.special(tags.variableName), color: "#79c0ff" },
 ]);
 
 export function createEditor(
