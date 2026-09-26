@@ -127,9 +127,10 @@ export function exportPdf(dark: boolean): void {
 }
 
 // Builds a TOC page whose entries link to heading anchors; Chromium's
-// print-to-pdf turns them into clickable PDF links.
-function buildPdfToc(body: HTMLElement): string {
-  const headings = Array.from(body.querySelectorAll("h1, h2, h3, h4, h5, h6"));
+// print-to-pdf turns them into clickable PDF links. The heading used as
+// the cover title is skipped to avoid a redundant first entry.
+function buildPdfToc(body: HTMLElement, skip?: Element): string {
+  const headings = Array.from(body.querySelectorAll("h1, h2, h3, h4, h5, h6")).filter((h) => h !== skip);
   if (headings.length === 0) return "";
   const items = headings.map((h, i) => {
     if (!h.id) h.id = `pdf-h-${i}`;
@@ -151,12 +152,13 @@ const PDF_LAYOUT_CSS = [
   // TOC entries: blue = obviously clickable, indented per heading level
   "#pdf-toc a{color:var(--accent);text-decoration:none}",
   "#pdf-toc div{padding:3px 0;line-height:1.5}",
-  ".toc-l1{font-weight:600;font-size:1.05em;margin-top:8px}",
-  ".toc-l2{padding-left:24px}",
-  ".toc-l3{padding-left:48px;font-size:0.95em}",
-  ".toc-l4{padding-left:72px;font-size:0.9em}",
-  ".toc-l5{padding-left:96px;font-size:0.9em}",
-  ".toc-l6{padding-left:120px;font-size:0.9em}",
+  // level rules need the #pdf-toc prefix to beat "#pdf-toc div" specificity
+  "#pdf-toc .toc-l1{font-weight:600;font-size:1.08em;margin-top:10px}",
+  "#pdf-toc .toc-l2{padding-left:24px}",
+  "#pdf-toc .toc-l3{padding-left:48px;font-size:0.93em}",
+  "#pdf-toc .toc-l4{padding-left:72px;font-size:0.88em}",
+  "#pdf-toc .toc-l5{padding-left:96px;font-size:0.88em}",
+  "#pdf-toc .toc-l6{padding-left:120px;font-size:0.88em}",
 ].join("");
 
 export async function exportPdfToc(
@@ -176,15 +178,18 @@ export async function exportPdfToc(
   const css = await inlineFontUrls(collectAppCss() + getHljsCss(false));
   const body = previewEl.cloneNode(true) as HTMLElement;
   await inlineImages(body);
-  const tocHtml = buildPdfToc(body);
-  const titleHtml = `<div class="doc-title">${escapeHtml(title)}</div>`;
+  // cover title: the document's first h1 if it has one, else the file name
+  const firstH1 = body.querySelector("h1");
+  const docTitle = firstH1?.textContent?.trim() || title;
+  const tocHtml = buildPdfToc(body, firstH1 ?? undefined);
+  const titleHtml = `<div class="doc-title">${escapeHtml(docTitle)}</div>`;
   const cover = tocHtml ? `<div id="pdf-cover">\n${titleHtml}\n${tocHtml}\n</div>` : titleHtml;
   const html = [
     "<!doctype html>",
     `<html lang="${document.documentElement.lang}">`,
     "<head>",
     '<meta charset="utf-8" />',
-    `<title>${escapeHtml(title)}</title>`,
+    `<title>${escapeHtml(docTitle)}</title>`,
     `<style>${css}</style>`,
     `<style>${PDF_LAYOUT_CSS.replace("FONT_SIZE", String(fontSize))}</style>`,
     "</head>",
