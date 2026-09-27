@@ -2,7 +2,7 @@
 
 ## 当前状态
 
-- 版本：0.6.0（`package.json` / `src-tauri/tauri.conf.json` / `src-tauri/Cargo.toml` 三处保持一致）
+- 版本：0.6.1（`package.json` / `src-tauri/tauri.conf.json` / `src-tauri/Cargo.toml` 三处保持一致）
 - 本地构建验证命令：`npm run tauri build -- --no-bundle`，产物 `src-tauri/target/release/md-v.exe`
 - 改动提交后双推：`git push gitee main && git push github main`
 

@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.1] - 2026-09-27
+
 ### Fixed
 
 - Center the main window on startup (`"center": true` in `tauri.conf.json`) instead of relying on the OS default cascading placement, which left the window slightly to the left and too low.
