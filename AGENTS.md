@@ -23,3 +23,4 @@
 - 右键注册：.md/.markdown 走 ProgID 完整关联；其它文件用 `HKCU\Software\Classes\*\shell\Open with md-v` 通配 verb（全文件生效，不动默认关联）；`LEGACY_EXTRA_EXTS` 仅用于卸载时清理旧版逐后缀注册
 - 前端版本号由 `vite.config.ts` 的 `define.__APP_VERSION__` 从 `package.json` 注入
 - 单实例：`tauri-plugin-single-instance`，二次启动把文件路径发 `open-files` 事件给前端开新标签
+- frontmatter：文档开头正确闭合的 YAML frontmatter 由 Rust 侧 serde_yml 解析为键值表格渲染在正文上方；解析失败回退原文渲染（详见 PROGRESS.md 已知坑：不用 pulldown-cmark 的 ENABLE_YAML_STYLE_METADATA_BLOCKS 选项）

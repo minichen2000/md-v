@@ -31,6 +31,69 @@ fn get_file_mtime(path: String) -> Result<u64, String> {
         .unwrap_or(0))
 }
 
+// Extract a YAML frontmatter block (`---` ... `---`/`...`) that starts on the
+// very first line of the document, returning its YAML text and the remaining
+// document. Only the document start is considered, so mid-document `---`
+// lines keep rendering as thematic breaks.
+fn extract_yaml_frontmatter(src: &str) -> Option<(&str, &str)> {
+    let src = src.strip_prefix('\u{feff}').unwrap_or(src);
+    let mut lines = src.split_inclusive('\n');
+    let first = lines.next()?;
+    if first.trim_end_matches(['\r', '\n']) != "---" {
+        return None;
+    }
+    let mut end = first.len();
+    for line in lines {
+        end += line.len();
+        let t = line.trim_end_matches(['\r', '\n']);
+        if t == "---" || t == "..." {
+            return Some((&src[first.len()..end - line.len()], &src[end..]));
+        }
+    }
+    None
+}
+
+fn escape_html(s: &str) -> String {
+    s.replace('&', "&amp;").replace('<', "&lt;").replace('>', "&gt;")
+}
+
+// Render frontmatter YAML as a GitHub-style key-value table.
+// Returns None when the YAML is not a usable mapping (caller then renders
+// the document untouched, so malformed frontmatter degrades gracefully).
+fn render_frontmatter_table(yaml: &str) -> Option<String> {
+    let value: serde_yml::Value = serde_yml::from_str(yaml).ok()?;
+    // an empty (or comment-only) block renders nothing
+    if value.is_null() {
+        return Some(String::new());
+    }
+    let mapping = value.as_mapping()?;
+    if mapping.is_empty() {
+        return Some(String::new());
+    }
+    let mut rows = String::new();
+    for (k, v) in mapping {
+        let key = k.as_str().map(str::to_owned).unwrap_or_else(|| {
+            serde_yml::to_string(k).unwrap_or_default().trim().to_owned()
+        });
+        let val = match v {
+            serde_yml::Value::Null => String::new(),
+            serde_yml::Value::Bool(b) => b.to_string(),
+            serde_yml::Value::Number(n) => n.to_string(),
+            serde_yml::Value::String(s) => s.clone(),
+            other => serde_yml::to_string(other)
+                .unwrap_or_default()
+                .trim_end()
+                .to_owned(),
+        };
+        rows.push_str(&format!(
+            "<tr><th>{}</th><td>{}</td></tr>",
+            escape_html(&key),
+            escape_html(&val)
+        ));
+    }
+    Some(format!("<table class=\"frontmatter\"><tbody>{rows}</tbody></table>"))
+}
+
 #[tauri::command]
 fn render_markdown(src: String) -> String {
     let options = Options::ENABLE_TABLES
@@ -38,8 +101,23 @@ fn render_markdown(src: String) -> String {
         | Options::ENABLE_STRIKETHROUGH
         | Options::ENABLE_TASKLISTS
         | Options::ENABLE_HEADING_ATTRIBUTES;
-    let parser = Parser::new_ext(&src, options);
     let mut out = String::new();
+    let body = match extract_yaml_frontmatter(&src) {
+        Some((yaml, rest)) => match render_frontmatter_table(yaml) {
+            Some(table) => {
+                out.push_str(&table);
+                rest
+            }
+            None => {
+                // malformed YAML: fall back to rendering the document as-is
+                let parser = Parser::new_ext(&src, options);
+                html::push_html(&mut out, parser);
+                return out;
+            }
+        },
+        None => src.as_str(),
+    };
+    let parser = Parser::new_ext(body, options);
     html::push_html(&mut out, parser);
     out
 }

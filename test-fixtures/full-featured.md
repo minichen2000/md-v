@@ -1,3 +1,9 @@
+---
+title: md-v 功能测试文档
+date: 2024-01-01
+tags: [markdown, test, frontmatter]
+---
+
 # md-v 功能测试文档
 
 这是一份用于验证 md-v 渲染能力的测试文档，覆盖 GFM 扩展、代码高亮、数学公式和 Mermaid 图表。

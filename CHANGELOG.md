@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-09-28
+
+### Added
+
+- YAML frontmatter (`---` delimited metadata block at the start of a Markdown file) is rendered as a key-value table above the document content in preview, HTML export and PDF export. Malformed frontmatter falls back to the previous (plain) rendering.
+
 ## [0.6.1] - 2026-09-27
 
 ### Fixed
