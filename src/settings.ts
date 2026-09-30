@@ -20,7 +20,7 @@ const defaultLang: Lang = navigator.language.startsWith("zh") ? "zh-CN" : "en";
 const DEFAULTS: Settings = {
   theme: "light",
   lang: defaultLang,
-  fontSize: 14,
+  fontSize: 15,
   splitRatio: 35,
   syncScroll: true,
   showToc: false,

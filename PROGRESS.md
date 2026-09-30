@@ -2,7 +2,7 @@
 
 ## 当前状态
 
-- 版本：0.7.0（`package.json` / `src-tauri/tauri.conf.json` / `src-tauri/Cargo.toml` 三处保持一致）
+- 版本：0.7.1（`package.json` / `src-tauri/tauri.conf.json` / `src-tauri/Cargo.toml` 三处保持一致）
 - 本地构建验证命令：`npm run tauri build -- --no-bundle`，产物 `src-tauri/target/release/md-v.exe`
 - 改动提交后双推：`git push gitee main && git push github main`
 - Node：Vite 8 需要 Node ≥ 20（见 BUILDING.md）。系统 PATH 里的 `C:\software\node-v10.24.1-win-x64` 太老不可用；2026-09 起新版装在 `C:\software\node-v24.21.0-win-x64`（v24.21.0 LTS），构建时临时 `export PATH=/c/software/node-v24.21.0-win-x64:$PATH` 使用；如需全局切换，把系统 PATH 中的 node 目录改为该路径。
@@ -13,6 +13,7 @@
 - 2026-09：修复主窗口启动位置——`tauri.conf.json` 增加 `"center": true`（此前未设置，Windows 默认级联摆放导致偏左偏下）；默认高度 800 → 752，避免贴到任务栏。
 - 2026-09：建立 `CHANGELOG.md` / `PROGRESS.md`，补齐记录文件约定。
 - 2026-09：新增 `.gitattributes`（`* text=auto`，`*.toml`/`Cargo.lock` 固定 LF），消除 Tauri CLI 构建重写 `Cargo.toml` 导致的换行符噪音 diff（见已知坑）。
+- 2026-09：外观微调——默认字号 14 → 15（`src/settings.ts`）；预览区行间距 1.6 → 2.2、全局字体栈改为 `v-sans, system-ui, …`（`src/styles.css`）。
 
 ## 待办
 

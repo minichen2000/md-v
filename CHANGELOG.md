@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Increase the default editor/preview font size from 14 to 15.
+- Loosen the preview line height from 1.6 to 2.2 for more comfortable reading.
+- Replace the UI font stack with `v-sans, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol"`.
+
 ## [0.7.0] - 2026-09-28
 
 ### Added
