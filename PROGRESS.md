@@ -14,6 +14,8 @@
 - 2026-09：建立 `CHANGELOG.md` / `PROGRESS.md`，补齐记录文件约定。
 - 2026-09：新增 `.gitattributes`（`* text=auto`，`*.toml`/`Cargo.lock` 固定 LF），消除 Tauri CLI 构建重写 `Cargo.toml` 导致的换行符噪音 diff（见已知坑）。
 - 2026-09：外观微调——默认字号 14 → 15（`src/settings.ts`）；预览区行间距 1.6 → 2.2、全局字体栈改为 `v-sans, system-ui, …`（`src/styles.css`）。
+- 2026-10：修复直接双击启动（无已打开文件）时 tab 栏没有 `+` 按钮、无法新建文件——`src/main.ts` 启动流程补一次 `refreshTabBar()`（此前仅在激活/切换标签时渲染 tab 栏，空标签时 `#tabbar` 为空）。
+- 2026-10：块引用（`>`）内多行软换行改按换行显示——`src/styles.css` 的 `#preview-pane blockquote` 加 `white-space: pre-line`（pulldown-cmark 已把软换行输出为文本节点里的 `\n`，默认 `white-space: normal` 被浏览器折叠成空格）。预览/导出 HTML/导出 PDF 一致生效（导出经 `collectAppCss()` 收集 styles.css 规则）。
 
 ## 待办
 

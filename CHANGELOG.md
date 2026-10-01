@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Show the tab bar's `+` (new tab) button even when md-v starts with no file open, so a new untitled file can be created directly.
+- Render soft line breaks inside blockquotes (`>`) as line breaks (`white-space: pre-line`), matching the per-`>`-line display some viewers use.
+
 ### Changed
 
 - Increase the default editor/preview font size from 14 to 15.

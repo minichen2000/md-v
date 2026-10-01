@@ -353,6 +353,7 @@ body.dark {
   padding: 0 1em;
   color: var(--quote-fg);
   border-left: 0.25em solid var(--quote-border);
+  white-space: pre-line;
 }
 
 #preview-pane table {

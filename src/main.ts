@@ -949,6 +949,7 @@ async function main(): Promise<void> {
   toc = createToc($("#toc"), $("#preview-pane"));
   wireEvents();
   applySettings(false);
+  refreshTabBar();
   showWelcome(true);
   updateStatus();
 
