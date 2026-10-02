@@ -95,6 +95,7 @@ type MenuEntry = {
   disabled?: boolean;
   title?: string;
   onClick?: () => void;
+  onRemove?: () => void;
 } | "sep";
 
 let menuEl: HTMLElement | null = null;
@@ -122,8 +123,26 @@ function openMenu(entries: MenuEntry[]): void {
     }
     const item = document.createElement("div");
     item.className = "menu-item" + (entry.disabled ? " disabled" : "");
-    item.textContent = (entry.checked ? "✓ " : "") + entry.label;
     if (entry.title) item.title = entry.title;
+
+    const label = document.createElement("span");
+    label.className = "menu-label";
+    label.textContent = (entry.checked ? "✓ " : "") + entry.label;
+    item.appendChild(label);
+
+    if (!entry.disabled && entry.onRemove) {
+      const rm = document.createElement("button");
+      rm.type = "button";
+      rm.className = "menu-remove";
+      rm.innerHTML = icons.x;
+      rm.title = t("removeFromRecent");
+      rm.addEventListener("click", (e) => {
+        e.stopPropagation();
+        entry.onRemove!();
+      });
+      item.appendChild(rm);
+    }
+
     if (!entry.disabled && entry.onClick) {
       item.addEventListener("click", () => {
         closeMenu();
@@ -556,7 +575,15 @@ function handlePaneScroll(pane: Pane): void {
 function showRecentMenu(): void {
   const recent = getRecent();
   const entries: MenuEntry[] = recent.length
-    ? recent.map((p) => ({ label: p, title: p, onClick: () => void openFiles([p]) }))
+    ? recent.map((p) => ({
+        label: p,
+        title: p,
+        onClick: () => void openFiles([p]),
+        onRemove: () => {
+          removeRecent(p);
+          showRecentMenu();
+        },
+      }))
     : [{ label: t("recentEmpty"), disabled: true }];
   entries.push("sep", {
     label: t("clearRecent"),

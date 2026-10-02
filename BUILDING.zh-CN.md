@@ -26,8 +26,11 @@ npm run tauri dev
 npm run build
 cd src-tauri && cargo check
 
-# 4. 发布构建（不打 bundle，只产绿色版 exe）
-npm run tauri build -- --no-bundle
+# 4. 日常构建（fast 配置，快速，用于开发验证）
+npm run build:exe        # → src-tauri/target/fast/md-v.exe
+
+# 5. 发布构建（release 全量 LTO，正式发版时再用）
+npm run build:release    # → src-tauri/target/release/md-v.exe
 ```
 
 产物：

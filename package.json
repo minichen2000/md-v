@@ -1,14 +1,16 @@
 {
   "name": "tauri-app",
   "private": true,
-  "version": "0.7.1",
+  "version": "0.7.2",
   "license": "MIT",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
-    "tauri": "tauri"
+    "tauri": "tauri",
+    "build:exe": "tauri build --no-bundle -- --profile fast",
+    "build:release": "tauri build --no-bundle"
   },
   "dependencies": {
     "@codemirror/commands": "^6.11.1",

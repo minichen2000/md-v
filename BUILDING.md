@@ -26,8 +26,11 @@ npm run tauri dev
 npm run build
 cd src-tauri && cargo check
 
-# 4. Release build (no bundling — portable exe only)
-npm run tauri build -- --no-bundle
+# 4. Daily build (fast profile — quick, for development verification)
+npm run build:exe        # → src-tauri/target/fast/md-v.exe
+
+# 5. Release build (full LTO — for the actual release, only when asked)
+npm run build:release    # → src-tauri/target/release/md-v.exe
 ```
 
 Artifacts:

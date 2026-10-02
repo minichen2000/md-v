@@ -447,13 +447,47 @@ body.dark {
 }
 
 .menu-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   padding: 6px 12px;
   border-radius: 4px;
   cursor: pointer;
   font-size: 13px;
   white-space: nowrap;
+}
+
+.menu-label {
+  flex: 1;
+  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.menu-remove {
+  display: flex;
+  visibility: hidden;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--fg);
+  cursor: pointer;
+}
+
+.menu-remove:hover {
+  background: var(--bg-alt);
+  color: #e5484d;
+}
+
+.menu-item:hover .menu-remove {
+  visibility: visible;
 }
 
 .menu-item:hover {

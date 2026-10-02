@@ -8,7 +8,7 @@
 
 ## 构建与发布
 
-- 每次改动后本地构建验证：`npm run tauri build -- --no-bundle`，产物 `src-tauri/target/release/md-v.exe`
+- 每次改动后本地构建验证：日常用 `npm run build:exe`（fast profile，增量快，产物 `src-tauri/target/fast/md-v.exe`）；正式发版才用 `npm run build:release`（release 全量 LTO，产物 `src-tauri/target/release/md-v.exe`）
 - 只发布绿色单 exe/裸二进制（不要 NSIS 安装包，`tauri.conf.json` 的 `bundle.targets` 保持 `[]`）
 - Release 由 GitHub Actions 构建：`.github/workflows/release.yml` 在推送 `v*` tag 时触发，构建 Windows/macOS/Linux 三平台产物并自动创建 GitHub Release；平时推 main 不触发 CI
 - 发版流程：

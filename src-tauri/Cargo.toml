@@ -1,6 +1,6 @@
 [package]
 name = "md-v"
-version = "0.7.1"
+version = "0.7.2"
 description = "A fast Markdown viewer/editor"
 authors = ["minichen2000"]
 edition = "2021"
@@ -41,3 +41,12 @@ lto = true
 opt-level = 3
 panic = "abort"
 strip = true
+
+# 日常开发验证快速构建（npm run build:exe）：关 LTO、多核并行，增量快；产物 target/fast/md-v.exe。
+# 正式发版（npm run build:release）走 release（全量 LTO、最大优化），产物 target/release/md-v.exe。
+# 两者均 --no-bundle，只产绿色版 exe，不出安装包。
+[profile.fast]
+inherits = "release"
+lto = false
+codegen-units = 16
+strip = false

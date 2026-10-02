@@ -2,8 +2,8 @@
 
 ## 当前状态
 
-- 版本：0.7.1（`package.json` / `src-tauri/tauri.conf.json` / `src-tauri/Cargo.toml` 三处保持一致）
-- 本地构建验证命令：`npm run tauri build -- --no-bundle`，产物 `src-tauri/target/release/md-v.exe`
+- 版本：0.7.2（`package.json` / `src-tauri/tauri.conf.json` / `src-tauri/Cargo.toml` 三处保持一致）
+- 本地构建验证命令：日常 `npm run build:exe`（fast，产物 `src-tauri/target/fast/md-v.exe`）；发版 `npm run build:release`（release，产物 `src-tauri/target/release/md-v.exe`）
 - 改动提交后双推：`git push gitee main && git push github main`
 - Node：Vite 8 需要 Node ≥ 20（见 BUILDING.md）。系统 PATH 里的 `C:\software\node-v10.24.1-win-x64` 太老不可用；2026-09 起新版装在 `C:\software\node-v24.21.0-win-x64`（v24.21.0 LTS），构建时临时 `export PATH=/c/software/node-v24.21.0-win-x64:$PATH` 使用；如需全局切换，把系统 PATH 中的 node 目录改为该路径。
 
@@ -16,6 +16,8 @@
 - 2026-09：外观微调——默认字号 14 → 15（`src/settings.ts`）；预览区行间距 1.6 → 2.2、全局字体栈改为 `v-sans, system-ui, …`（`src/styles.css`）。
 - 2026-10：修复直接双击启动（无已打开文件）时 tab 栏没有 `+` 按钮、无法新建文件——`src/main.ts` 启动流程补一次 `refreshTabBar()`（此前仅在激活/切换标签时渲染 tab 栏，空标签时 `#tabbar` 为空）。
 - 2026-10：块引用（`>`）内多行软换行改按换行显示——`src/styles.css` 的 `#preview-pane blockquote` 加 `white-space: pre-line`（pulldown-cmark 已把软换行输出为文本节点里的 `\n`，默认 `white-space: normal` 被浏览器折叠成空格）。预览/导出 HTML/导出 PDF 一致生效（导出经 `collectAppCss()` 收集 styles.css 规则）。
+- 2026-10：最近文件菜单支持单条删除——底层 `removeRecent`（`src/recent.ts`）早已存在，本次接 UI：`src/main.ts` 的 `MenuEntry` 增加 `onRemove` 字段，`openMenu` 对带 `onRemove` 的条目渲染右侧 hover 显示 × 按钮（`icons.x`，点击 `stopPropagation` 后调 `removeRecent` 并重开菜单原地刷新，避免冒泡触发"打开"）；样式 `.menu-label`/`.menu-remove` 在 `src/styles.css`；文案 `removeFromRecent` 在 `src/i18n.ts`。点条目正文仍是打开文件，只有精确点到 × 才删除。× 按钮用 `visibility` 占位（始终占 20px 宽、`hover` 才可见），而非 `display:none↔flex` 切换，避免菜单 `width:max-content` 随 hover 不同路径长度而抖动。
+- 2026-10：构建档对齐全局约定——`src-tauri/Cargo.toml` 新增 `[profile.fast]`（inherits release，关 LTO、`codegen-units=16`、不 strip）；`package.json` 新增 `build:exe`（`tauri build --no-bundle -- --profile fast`）与 `build:release`（`tauri build --no-bundle`）。日常验证编 fast，发版才 release；只产绿色版 exe、不出安装包（`bundle.targets` 保持 `[]`）。
 
 ## 待办
 
