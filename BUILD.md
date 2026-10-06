@@ -15,6 +15,8 @@ This document describes how to build md-v from source, including tested workarou
 
 ## Build Steps
 
+Image zoom/pan regression is included in `tests/image-view.test.mjs`: cursor anchoring, zoom limits, pan bounds, resizing, pointer cancellation and event cleanup. Desktop/browser UI automation requires the user's explicit approval before use; code tests and builds can run without it.
+
 Run `node --test tests/*.test.mjs` with Node 24 to check link routing, tab lifecycle/scroll state and image classification. For UI regression, scroll a Markdown document, open a local document link, switch back (and close the linked tab), then verify both panes retain their positions. Open an image link, toggle original size/fit, and press Esc; the source document should remain in place.
 
 ```bash

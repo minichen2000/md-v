@@ -25,5 +25,6 @@
 - 单实例：`tauri-plugin-single-instance`，二次启动把文件路径发 `open-files` 事件给前端开新标签
 - 预览链接统一经 `src/links.ts` 拦截默认导航：本地路径以当前文档为基准，图片由 `src/images.ts` 用 asset URL 浮层显示，不得送入 UTF-8 文本读取；其它本地文档复用标签打开流程，禁止回退到 WebView 页面跳转。回归用 `node --test tests/*.test.mjs`（Node 24）。
 - `TabStore.add()` 不激活标签；`remove()` 返回候选标签 ID，交给 UI 显式激活。切换前分别保存编辑区/预览区滚动位置；异步预览须校验渲染代次，恢复位置期间禁止滚动同步反向覆盖。
+- 图片缩放/平移由 `src/image-view.ts` 统一维护几何状态与指针捕获；滚轮以指针为中心缩放，平移限制在图像边界，关闭浮层须释放事件和 ResizeObserver。
 - frontmatter：文档开头正确闭合的 YAML frontmatter 由 Rust 侧 serde_yml 解析为键值表格渲染在正文上方；解析失败回退原文渲染（详见 PROGRESS.md 已知坑：不用 pulldown-cmark 的 ENABLE_YAML_STYLE_METADATA_BLOCKS 选项）
 - 行尾：`.gitattributes` 已把 `*.toml`/`Cargo.lock` 钉死为 LF——Tauri CLI 构建时会用 LF 重写 `Cargo.toml`（上游 tauri#8711 未修），Windows 上 `core.autocrlf=true` 会产生换行符噪音 diff，勿删该文件

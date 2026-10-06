@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Zoom image previews with the mouse wheel around the cursor, and drag oversized images with the left mouse button. Show the zoom percentage and provide fit-to-window and original-size reset buttons.
+
 ### Fixed
 
 - Preserve editor and preview reading positions when opening linked documents, switching tabs or closing the active tab; discard stale asynchronous preview renders.
