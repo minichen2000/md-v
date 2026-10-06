@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.3] - 2026-10-06
+
 ### Added
 
 - Zoom image previews with the mouse wheel around the cursor, and drag oversized images with the left mouse button. Show the zoom percentage and provide fit-to-window and original-size reset buttons.

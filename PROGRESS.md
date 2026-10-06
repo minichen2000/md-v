@@ -2,13 +2,14 @@
 
 ## 当前状态
 
-- 版本：0.7.2（`package.json` / `src-tauri/tauri.conf.json` / `src-tauri/Cargo.toml` 三处保持一致）
+- 版本：0.7.3（`package.json` / `src-tauri/tauri.conf.json` / `src-tauri/Cargo.toml`，以及 npm/Cargo 锁文件的根包版本保持一致）
 - 本地构建验证命令：日常 `npm run build:exe`（fast，产物 `src-tauri/target/fast/md-v.exe`）；发版 `npm run build:release`（release，产物 `src-tauri/target/release/md-v.exe`）
 - 改动提交后双推：`git push gitee main && git push github main`
 - Node：Vite 8 需要 Node ≥ 20（见 BUILDING.md）。系统 PATH 里的 `C:\software\node-v10.24.1-win-x64` 太老不可用；2026-09 起新版装在 `C:\software\node-v24.21.0-win-x64`（v24.21.0 LTS），构建时临时 `export PATH=/c/software/node-v24.21.0-win-x64:$PATH` 使用；如需全局切换，把系统 PATH 中的 node 目录改为该路径。
 
 ## 已完成
 
+- 2026-10-06：准备 v0.7.3 正式发布，包含本地文档链接、标签阅读位置恢复、图片浮层及滚轮缩放/拖动。版本与锁文件根包版本同步为 0.7.3，CHANGELOG 的 Unreleased 内容归档到版本段；本地使用 release 全量 LTO 构建，GitHub 按 v0.7.3 标签生成三平台绿色版产物。
 - 2026-10-06：图片预览新增滚轮缩放与左键拖动。`src/image-view.ts` 保存倍率/位移，滚轮以指针所在图像位置为锚点（触及边界时夹紧），小图居中、大图允许拖至各边缘；显示百分比，适应窗口与原始尺寸按钮均可居中复位。支持窗口尺寸变化、pointer capture/cancel 与关闭后事件/ResizeObserver 清理；禁用图片原生拖放，滚轮不会传到文档。按用户偏好仅运行代码回归与构建，不使用 Computer Use。
 - 本次验证：`node --test tests/*.test.mjs` 26/26 通过，新增 6 项覆盖指针锚点、倍率与边界、窗口变化、滚轮/指针事件、取消和销毁清理；`npm run build:exe` 通过（fast，1m 01s，产物 `src-tauri/target/fast/md-v.exe`）。12 个改动文本 UTF-8 检查和 `git diff --check` 通过；未进行桌面自动操作。
 - 2026-10-06：跟进本地链接的阅读位置与图片问题。`TabStore.add()` 原先提前设置 activeId，导致激活流程取不到离开的标签；现在由 UI 显式激活，并分别保存编辑区 `scrollTop` 和 `previewScrollTop`。预览渲染加入代次检查与布局后位置恢复，屏蔽恢复引发的双向同步，图片加载/图表完成后补偿布局变化，用户主动滚动后停止补偿。关闭活动标签也经显式激活恢复相邻标签。
