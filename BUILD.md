@@ -1,6 +1,6 @@
 # Build Guide
 
-English | [简体中文](BUILDING.zh-CN.md)
+English | [简体中文](BUILD.zh.md)
 
 This document describes how to build md-v from source, including tested workarounds for network issues in mainland China.
 
@@ -14,6 +14,8 @@ This document describes how to build md-v from source, including tested workarou
 | WebView2 | Usually built into Windows 10/11 | If missing, install the [WebView2 Runtime](https://developer.microsoft.com/microsoft-edge/webview2) manually |
 
 ## Build Steps
+
+Run `node --test tests/*.test.mjs` with Node 24 to check link routing, tab lifecycle/scroll state and image classification. For UI regression, scroll a Markdown document, open a local document link, switch back (and close the linked tab), then verify both panes retain their positions. Open an image link, toggle original size/fit, and press Esc; the source document should remain in place.
 
 ```bash
 # 1. Install frontend dependencies

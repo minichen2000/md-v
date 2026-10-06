@@ -9,6 +9,10 @@
 
 ## 已完成
 
+- 2026-10-06：跟进本地链接的阅读位置与图片问题。`TabStore.add()` 原先提前设置 activeId，导致激活流程取不到离开的标签；现在由 UI 显式激活，并分别保存编辑区 `scrollTop` 和 `previewScrollTop`。预览渲染加入代次检查与布局后位置恢复，屏蔽恢复引发的双向同步，图片加载/图表完成后补偿布局变化，用户主动滚动后停止补偿。关闭活动标签也经显式激活恢复相邻标签。
+- 本地图片按扩展名分流到 `src/images.ts`：asset URL 交给系统 WebView 显示，免 UTF-8 解码；浮层提供适应窗口/原始尺寸、文件名/像素尺寸、Esc/关闭按钮，损坏或不支持的图片显示错误。已有文档标签直接复用，保留未保存内容；新增 4 项回归（共 20 项通过）。测试说明补入构建文档，并按现行命名迁移为 `BUILD.md` / `BUILD.zh.md`。
+- 图片分流仅作用于预览链接；通过文件对话框/拖放打开 SVG 时仍可编辑源码。桌面验证：原 README 末尾点击 `_模板.md` 后，点击原标签返回和关闭目标标签返回均恢复编辑区（顶部约第 20 行）与预览区的位置；实际中文 PNG（1915 × 821）成功显示，原始尺寸切换正常，Esc 关闭后原位置保持。首次 fast 构建因旧 exe 占用失败，关闭旧窗口后构建通过。
+- 最终验证：`node --test tests/*.test.mjs` 20/20 通过；`npm run build:exe` 成功（fast，45.57s，`src-tauri/target/fast/md-v.exe`），14 个改动文本 UTF-8 无 BOM/替换字符检查通过。桌面关键流程验证完成后，用户按物理 Esc 停止 Computer Use，此后未再进行桌面自动操作。
 - 2026-10-06：修复预览点击本地文件链接后回到初始页。原点击处理只接管 http(s)/mailto 与页内锚点，相对路径落入 WebView 默认导航；新增 `src/links.ts` 统一阻止默认跳转，按源文档目录解析本地链接并交给标签打开流程，保留原文档，读取失败沿用错误提示。兼容中文、URL 编码、父目录、Windows/Unix 绝对路径、UNC、file URL 与跨文档锚点；未保存文档提示先保存。新增路径和点击失败回归测试；中文 README 按现行约定改名为 `README.zh.md`。
 - 本次验证：截图目标文件存在（15,142 字节）；`node --test tests/links.test.mjs` 16/16 通过，包含点击/中键同步取消导航与异步读取失败；`npm run build:exe` 通过（fast，Rust 构建 1m 04s，产物 `src-tauri/target/fast/md-v.exe`）。沙箱构建访问 dist 被拒后在沙箱外重跑成功；Vite 仅有既存的动态/静态重复导入提示。9 个改动文本文件 UTF-8 无 BOM/替换字符检查通过。未进行桌面界面实点验证。
 - 2026-09：渲染支持 YAML frontmatter——`src-tauri/src/lib.rs` 的 `render_markdown` 增加 `extract_yaml_frontmatter` + `render_frontmatter_table`：文档最开头（容忍 BOM、CRLF）正确闭合的 `---`/`...` 元数据块用 serde_yml 解析为键值表格渲染在正文上方（GitHub 风格，样式在 `src/styles.css` 的 `table.frontmatter`）；解析失败（非 mapping 结构、语法错误）回退为原文渲染。预览/导出 HTML/导出 PDF 自动一致。

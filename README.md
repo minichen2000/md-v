@@ -12,7 +12,8 @@ Built on **Tauri v2** (Rust + system WebView), the single portable exe is only ~
 - **Edit left, render right**: CodeMirror 6 source editor on the left (syntax highlighting, line numbers, word wrap), live rendering on the right, with a draggable split ratio that is remembered
 - **General text viewer/editor**: opening json / xml / yaml / toml / ini / sh / ps1 / py / js / ts / html / css / sql / rust / c / c++ / java / php / diff and other text files switches to per-extension syntax highlighting and code folding (language packs lazy-loaded from local resources, zero network), with the editor taking the full width — fully editable and savable
 - **Modern Markdown rendering**: pulldown-cmark parses GFM (tables / task lists / strikethrough / footnotes) on the Rust side, YAML frontmatter at the top of the file is rendered as a key-value table, highlight.js for code highlighting, KaTeX for math, Mermaid for diagrams (lazy-loaded — zero overhead for documents without diagrams)
-- **Multi-tab**: open multiple files at once, unsaved tabs show ●, drag-and-drop to open files
+- **Multi-tab**: open multiple files at once, unsaved tabs show ●, drag-and-drop to open files; switching back restores both editor and preview reading positions
+- **Image links**: local PNG/JPEG/GIF/WebP/BMP/SVG/ICO/AVIF links open in a modal image viewer with fit-to-window/original size and pixel dimensions; close it or press Esc to continue reading (format support depends on the system WebView)
 - **Local document links**: preview links such as `./notes/example.md` open in tabs relative to the current document; Chinese/URL-encoded paths, absolute paths, `file://` URLs and heading fragments are supported. Save untitled documents before following relative links.
 - **Synchronized scrolling**: proportional scroll sync between editor and preview, toggleable
 - **Outline TOC**: h1–h4 sidebar with click-to-jump and scroll-highlighted current section
@@ -42,7 +43,7 @@ Run `md-v.exe` directly, then click "Add context menu" in the in-app ⚙ menu to
 
 ## Build
 
-See **[BUILDING.md](BUILDING.md)** (includes notes on network acceleration in mainland China). In short:
+See **[BUILD.md](BUILD.md)** (includes notes on network acceleration in mainland China). In short:
 
 ```bash
 npm install

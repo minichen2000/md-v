@@ -7,6 +7,7 @@ export interface Tab {
   dirty: boolean;
   doc: string;
   scrollTop: number;
+  previewScrollTop: number;
   mtime: number | null;
   deleted: boolean;
 }
@@ -35,7 +36,6 @@ export class TabStore {
   add(path: string | null, doc: string): Tab {
     const existing = path ? this.tabs.find((tab) => tab.path === path) : undefined;
     if (existing) {
-      this.activeId = existing.id;
       return existing;
     }
     const tab: Tab = {
@@ -45,22 +45,25 @@ export class TabStore {
       dirty: false,
       doc,
       scrollTop: 0,
+      previewScrollTop: 0,
       mtime: null,
       deleted: false,
     };
     this.tabs.push(tab);
-    this.activeId = tab.id;
+    // Activation belongs to the UI, after it snapshots the outgoing tab.
     return tab;
   }
 
-  remove(id: number): void {
+  remove(id: number): number | null {
     const idx = this.tabs.findIndex((tab) => tab.id === id);
-    if (idx < 0) return;
+    if (idx < 0) return this.activeId;
     this.tabs.splice(idx, 1);
     if (this.activeId === id) {
       const next = this.tabs[Math.min(idx, this.tabs.length - 1)];
-      this.activeId = next ? next.id : null;
+      this.activeId = null;
+      return next?.id ?? null;
     }
+    return this.activeId;
   }
 
   setActive(id: number): void {

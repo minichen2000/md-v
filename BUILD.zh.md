@@ -1,6 +1,6 @@
 # 构建说明
 
-[English](BUILDING.md) | 简体中文
+[English](BUILD.md) | 简体中文
 
 本文档描述如何从源码构建 md-v，包含国内网络环境下的实测踩坑记录。
 
@@ -14,6 +14,8 @@
 | WebView2 | Windows 10/11 一般已内置 | 缺失时手动安装 [WebView2 Runtime](https://developer.microsoft.com/microsoft-edge/webview2) |
 
 ## 构建步骤
+
+用 Node 24 执行 `node --test tests/*.test.mjs`，验证链接路由、标签生命周期/滚动状态及图片识别。界面回归：将 Markdown 滚动到中段，点本地文档链接后切回原标签（另测关闭目标标签），确认两侧位置均恢复；点击图片链接，切换原始尺寸/适应窗口，再按 Esc，原文档位置应保持。
 
 ```bash
 # 1. 安装前端依赖

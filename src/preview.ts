@@ -48,15 +48,23 @@ function rewriteImages(container: HTMLElement, basePath?: string): void {
   });
 }
 
-export async function renderPreview(container: HTMLElement, src: string, dark: boolean, basePath?: string): Promise<void> {
+export async function renderPreview(
+  container: HTMLElement, src: string, dark: boolean, basePath?: string,
+  isCurrent: () => boolean = () => true, onLayout: () => void = () => {},
+): Promise<void> {
   let html: string;
   try {
     html = await invoke<string>("render_markdown", { src });
   } catch {
     return;
   }
+  if (!isCurrent()) return;
   container.innerHTML = html;
   rewriteImages(container, basePath);
+  container.querySelectorAll("img").forEach((img) => {
+    img.addEventListener("load", onLayout, { once: true });
+    img.addEventListener("error", onLayout, { once: true });
+  });
 
   container.querySelectorAll<HTMLElement>("pre code").forEach((code) => {
     if (code.className.includes("language-mermaid")) return;
@@ -77,7 +85,9 @@ export async function renderPreview(container: HTMLElement, src: string, dark: b
     throwOnError: false,
   });
 
+  onLayout();
   await renderMermaidBlocks(container, dark);
+  if (isCurrent()) onLayout();
 }
 
 async function renderMermaidBlocks(container: HTMLElement, dark: boolean): Promise<void> {

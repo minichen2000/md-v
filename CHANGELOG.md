@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Preserve editor and preview reading positions when opening linked documents, switching tabs or closing the active tab; discard stale asynchronous preview renders.
+- Preview local image links in a modal viewer instead of reading them as UTF-8 text. Support fit-to-window/original-size viewing and Escape to return to the document.
 - Open local document links from the preview in tabs relative to the current file instead of navigating the WebView and resetting the app. Support Chinese/encoded paths, absolute paths, file URLs and heading fragments; report missing files without leaving the document.
 
 ## [0.7.2] - 2026-10-02

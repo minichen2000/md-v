@@ -17,6 +17,7 @@ import { addRecent, getRecent, removeRecent, clearRecent } from "./recent";
 import { exportHtml, exportPdf, exportPdfToc } from "./export";
 import { icons } from "./icons";
 import { bindPreviewLinks, scrollToFragment } from "./links";
+import { isImagePath, showImagePreview } from "./images";
 import "./styles.css";
 
 const settings: Settings = loadSettings();
@@ -26,6 +27,10 @@ let editorView: ReturnType<typeof createEditor> | null = null;
 let renderTimer: number | null = null;
 let tocTimer: number | null = null;
 let toc: TocController;
+let previewGeneration = 0;
+let scrollInteraction = 0;
+let restoringScroll = false;
+let previewReadyTabId: number | null = null;
 
 const SESSION_KEY = "md-v-session";
 
@@ -288,7 +293,13 @@ function mountEditor(tab: Tab): void {
       })
       .catch(() => {});
   }
-  editorView.scrollDOM.scrollTop = tab.scrollTop;
+  const view = editorView;
+  view.requestMeasure({
+    read: () => null,
+    write: () => {
+      if (editorView === view) view.scrollDOM.scrollTop = tab.scrollTop;
+    },
+  });
 }
 
 function schedulePreview(tab: Tab): void {
@@ -300,13 +311,27 @@ function schedulePreview(tab: Tab): void {
   }, 150);
 }
 
-async function renderActivePreview(fragment?: string): Promise<void> {
+async function renderActivePreview(fragment?: string, restoreTop?: number): Promise<void> {
   const tab = store.active();
   if (!tab || !isMarkdownPath(tab.path)) return;
-  await renderPreview($("#preview-pane"), tab.doc, isDark(), tab.path ?? undefined);
-  toc.rebuild();
-  if (fragment !== undefined && store.active()?.id === tab.id) {
-    scrollToFragment($("#preview-pane"), fragment);
+  const pane = $("#preview-pane");
+  const top = restoreTop ?? pane.scrollTop;
+  const generation = ++previewGeneration;
+  const interaction = scrollInteraction;
+  const isCurrent = () => generation === previewGeneration && store.active()?.id === tab.id;
+  const restore = () => {
+    if (!isCurrent()) return;
+    previewReadyTabId = tab.id;
+    if (interaction !== scrollInteraction) return;
+    pauseScrollSync();
+    if (fragment) scrollToFragment(pane, fragment);
+    else pane.scrollTop = top;
+    toc.updateActive();
+  };
+  await renderPreview(pane, tab.doc, isDark(), tab.path ?? undefined, isCurrent, restore);
+  if (isCurrent()) {
+    toc.rebuild();
+    restore();
   }
 }
 
@@ -321,7 +346,7 @@ function scheduleTocUpdate(): void {
 function rerenderActive(): void {
   const tab = store.active();
   if (tab) {
-    if (editorView) tab.scrollTop = editorView.scrollDOM.scrollTop;
+    rememberScroll(tab);
     mountEditor(tab);
     void renderActivePreview();
   }
@@ -370,18 +395,27 @@ async function restoreSession(): Promise<void> {
 
 /* ---- tabs ---- */
 
+function rememberScroll(tab: Tab): void {
+  if (editorView) tab.scrollTop = editorView.scrollDOM.scrollTop;
+  if (previewReadyTabId === tab.id) tab.previewScrollTop = $("#preview-pane").scrollTop;
+}
+
 function activateTab(id: number, fragment?: string): void {
   const current = store.active();
-  if (current && current.id !== id && editorView) {
-    current.scrollTop = editorView.scrollDOM.scrollTop;
-  }
+  if (current?.id === id && fragment === undefined) return;
+  if (current) rememberScroll(current);
+  ++previewGeneration; // Invalidate any in-flight render of the previous document.
+  previewReadyTabId = null;
+  $("#preview-pane").replaceChildren();
+  pauseScrollSync();
   store.setActive(id);
   const tab = store.active();
+  updateLayoutMode();
   refreshTabBar();
   if (tab) {
     showWelcome(false);
     mountEditor(tab);
-    void renderActivePreview(fragment);
+    void renderActivePreview(fragment, tab.previewScrollTop);
     void checkExternal(tab);
   } else {
     destroyEditor();
@@ -403,6 +437,11 @@ function newTab(): void {
 async function openFiles(paths: string[], fragment?: string): Promise<void> {
   for (const path of paths) {
     try {
+      const existing = store.list().find((tab) => tab.path === path);
+      if (existing) {
+        activateTab(existing.id, fragment);
+        continue;
+      }
       const doc = await invoke<string>("read_file", { path });
       const tab = store.add(path, doc);
       tab.mtime = await invoke<number>("get_file_mtime", { path }).catch(() => null);
@@ -467,10 +506,13 @@ function closeTab(id: number): void {
   if (!tab) return;
   if (tab.dirty && !window.confirm(t("unsavedConfirm"))) return;
   const wasActive = store.active()?.id === id;
-  store.remove(id);
-  const next = store.active();
   if (wasActive) {
-    if (next) activateTab(next.id);
+    ++previewGeneration;
+    pauseScrollSync();
+  }
+  const nextId = store.remove(id);
+  if (wasActive) {
+    if (nextId !== null) activateTab(nextId);
     else {
       destroyEditor();
       $("#preview-pane").innerHTML = "";
@@ -549,6 +591,18 @@ type Pane = "editor" | "preview";
 let scrollSource: Pane | null = null;
 let scrollStamp = 0;
 let scrollRaf = 0;
+let scrollPauseGeneration = 0;
+
+function pauseScrollSync(): void {
+  restoringScroll = true;
+  if (scrollRaf) cancelAnimationFrame(scrollRaf);
+  scrollRaf = 0;
+  scrollSource = null;
+  const generation = ++scrollPauseGeneration;
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    if (generation === scrollPauseGeneration) restoringScroll = false;
+  }));
+}
 
 function markSource(pane: Pane): void {
   scrollSource = pane;
@@ -557,7 +611,7 @@ function markSource(pane: Pane): void {
 
 function handlePaneScroll(pane: Pane): void {
   if (pane === "preview") scheduleTocUpdate();
-  if (!settings.syncScroll || plainMode()) return;
+  if (restoringScroll || previewReadyTabId !== store.active()?.id || !settings.syncScroll || plainMode()) return;
   const now = performance.now();
   if (scrollSource !== pane && now - scrollStamp < 300) return; // follower side: ignore
   markSource(pane);
@@ -810,6 +864,9 @@ function wireEvents(): void {
   store.onSwitch = activateTab;
   store.onClose = closeTab;
   store.onNew = newTab;
+  for (const event of ["wheel", "pointerdown", "touchstart", "keydown"]) {
+    $("#workspace").addEventListener(event, () => { ++scrollInteraction; }, { passive: true });
+  }
 
   // suppress the WebView2 default context menu; show our own instead
   window.addEventListener("contextmenu", (e) => {
@@ -852,6 +909,7 @@ function wireEvents(): void {
   $("#btn-settings").addEventListener("click", () => showSettingsMenu());
 
   window.addEventListener("keydown", (e) => {
+    if (document.querySelector("dialog[open]")) return;
     if (!e.ctrlKey) return;
     const key = e.key.toLowerCase();
     if (key === "o") {
@@ -873,6 +931,7 @@ function wireEvents(): void {
   window.addEventListener(
     "wheel",
     (e) => {
+      if (document.querySelector("dialog[open]")) return;
       if (!e.ctrlKey) return;
       e.preventDefault();
       zoom(e.deltaY < 0 ? 1 : -1);
@@ -905,7 +964,14 @@ function wireEvents(): void {
   previewPane.addEventListener("mouseenter", () => markSource("preview"));
   bindPreviewLinks(previewPane, {
     basePath: () => store.active()?.path ?? null,
-    openFile: (path, fragment) => openFiles([path], fragment),
+    openFile: async (path, fragment) => {
+      if (isImagePath(path)) {
+        await invoke<number>("get_file_mtime", { path });
+        showImagePreview(path);
+      } else {
+        await openFiles([path], fragment);
+      }
+    },
     openExternal: openUrl,
     missingBase: () => window.alert(t("saveBeforeLocalLink")),
     onError: (error) => window.alert(`${t("openFailed")}${error}`),
