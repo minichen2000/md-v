@@ -16,6 +16,7 @@ import { createToc, type TocController } from "./toc";
 import { addRecent, getRecent, removeRecent, clearRecent } from "./recent";
 import { exportHtml, exportPdf, exportPdfToc } from "./export";
 import { icons } from "./icons";
+import { bindPreviewLinks, scrollToFragment } from "./links";
 import "./styles.css";
 
 const settings: Settings = loadSettings();
@@ -299,11 +300,14 @@ function schedulePreview(tab: Tab): void {
   }, 150);
 }
 
-async function renderActivePreview(): Promise<void> {
+async function renderActivePreview(fragment?: string): Promise<void> {
   const tab = store.active();
   if (!tab || !isMarkdownPath(tab.path)) return;
   await renderPreview($("#preview-pane"), tab.doc, isDark(), tab.path ?? undefined);
   toc.rebuild();
+  if (fragment !== undefined && store.active()?.id === tab.id) {
+    scrollToFragment($("#preview-pane"), fragment);
+  }
 }
 
 function scheduleTocUpdate(): void {
@@ -366,7 +370,7 @@ async function restoreSession(): Promise<void> {
 
 /* ---- tabs ---- */
 
-function activateTab(id: number): void {
+function activateTab(id: number, fragment?: string): void {
   const current = store.active();
   if (current && current.id !== id && editorView) {
     current.scrollTop = editorView.scrollDOM.scrollTop;
@@ -377,7 +381,7 @@ function activateTab(id: number): void {
   if (tab) {
     showWelcome(false);
     mountEditor(tab);
-    void renderActivePreview();
+    void renderActivePreview(fragment);
     void checkExternal(tab);
   } else {
     destroyEditor();
@@ -396,7 +400,7 @@ function newTab(): void {
   editorView?.focus();
 }
 
-async function openFiles(paths: string[]): Promise<void> {
+async function openFiles(paths: string[], fragment?: string): Promise<void> {
   for (const path of paths) {
     try {
       const doc = await invoke<string>("read_file", { path });
@@ -404,7 +408,7 @@ async function openFiles(paths: string[]): Promise<void> {
       tab.mtime = await invoke<number>("get_file_mtime", { path }).catch(() => null);
       tab.deleted = false;
       addRecent(path);
-      activateTab(tab.id);
+      activateTab(tab.id, fragment);
     } catch (e) {
       if (getRecent().includes(path)) {
         removeRecent(path);
@@ -899,22 +903,12 @@ function wireEvents(): void {
   const previewPane = $("#preview-pane");
   previewPane.addEventListener("scroll", () => handlePaneScroll("preview"));
   previewPane.addEventListener("mouseenter", () => markSource("preview"));
-  // links in the preview: external ones go to the system browser, #anchors scroll in-pane
-  previewPane.addEventListener("click", (e) => {
-    const a = (e.target as HTMLElement).closest("a");
-    if (!a) return;
-    const href = a.getAttribute("href") ?? "";
-    if (/^(https?:|mailto:)/i.test(href)) {
-      e.preventDefault();
-      void openUrl(href).catch(() => {});
-    } else if (href.startsWith("#")) {
-      e.preventDefault();
-      try {
-        previewPane.querySelector(`#${CSS.escape(href.slice(1))}`)?.scrollIntoView();
-      } catch {
-        // malformed anchor; ignore
-      }
-    }
+  bindPreviewLinks(previewPane, {
+    basePath: () => store.active()?.path ?? null,
+    openFile: (path, fragment) => openFiles([path], fragment),
+    openExternal: openUrl,
+    missingBase: () => window.alert(t("saveBeforeLocalLink")),
+    onError: (error) => window.alert(`${t("openFailed")}${error}`),
   });
 
   window.setInterval(() => {

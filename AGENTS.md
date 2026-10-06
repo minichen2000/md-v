@@ -23,5 +23,6 @@
 - 右键注册：.md/.markdown 走 ProgID 完整关联；其它文件用 `HKCU\Software\Classes\*\shell\Open with md-v` 通配 verb（全文件生效，不动默认关联）；`LEGACY_EXTRA_EXTS` 仅用于卸载时清理旧版逐后缀注册
 - 前端版本号由 `vite.config.ts` 的 `define.__APP_VERSION__` 从 `package.json` 注入
 - 单实例：`tauri-plugin-single-instance`，二次启动把文件路径发 `open-files` 事件给前端开新标签
+- 预览链接统一经 `src/links.ts` 拦截默认导航：本地路径以当前文档为基准并复用标签打开流程，禁止回退到 WebView 页面跳转；路径与点击回归用 `node --test tests/links.test.mjs`（Node 24）。
 - frontmatter：文档开头正确闭合的 YAML frontmatter 由 Rust 侧 serde_yml 解析为键值表格渲染在正文上方；解析失败回退原文渲染（详见 PROGRESS.md 已知坑：不用 pulldown-cmark 的 ENABLE_YAML_STYLE_METADATA_BLOCKS 选项）
 - 行尾：`.gitattributes` 已把 `*.toml`/`Cargo.lock` 钉死为 LF——Tauri CLI 构建时会用 LF 重写 `Cargo.toml`（上游 tauri#8711 未修），Windows 上 `core.autocrlf=true` 会产生换行符噪音 diff，勿删该文件

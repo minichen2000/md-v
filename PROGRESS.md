@@ -9,6 +9,8 @@
 
 ## 已完成
 
+- 2026-10-06：修复预览点击本地文件链接后回到初始页。原点击处理只接管 http(s)/mailto 与页内锚点，相对路径落入 WebView 默认导航；新增 `src/links.ts` 统一阻止默认跳转，按源文档目录解析本地链接并交给标签打开流程，保留原文档，读取失败沿用错误提示。兼容中文、URL 编码、父目录、Windows/Unix 绝对路径、UNC、file URL 与跨文档锚点；未保存文档提示先保存。新增路径和点击失败回归测试；中文 README 按现行约定改名为 `README.zh.md`。
+- 本次验证：截图目标文件存在（15,142 字节）；`node --test tests/links.test.mjs` 16/16 通过，包含点击/中键同步取消导航与异步读取失败；`npm run build:exe` 通过（fast，Rust 构建 1m 04s，产物 `src-tauri/target/fast/md-v.exe`）。沙箱构建访问 dist 被拒后在沙箱外重跑成功；Vite 仅有既存的动态/静态重复导入提示。9 个改动文本文件 UTF-8 无 BOM/替换字符检查通过。未进行桌面界面实点验证。
 - 2026-09：渲染支持 YAML frontmatter——`src-tauri/src/lib.rs` 的 `render_markdown` 增加 `extract_yaml_frontmatter` + `render_frontmatter_table`：文档最开头（容忍 BOM、CRLF）正确闭合的 `---`/`...` 元数据块用 serde_yml 解析为键值表格渲染在正文上方（GitHub 风格，样式在 `src/styles.css` 的 `table.frontmatter`）；解析失败（非 mapping 结构、语法错误）回退为原文渲染。预览/导出 HTML/导出 PDF 自动一致。
 - 2026-09：修复主窗口启动位置——`tauri.conf.json` 增加 `"center": true`（此前未设置，Windows 默认级联摆放导致偏左偏下）；默认高度 800 → 752，避免贴到任务栏。
 - 2026-09：建立 `CHANGELOG.md` / `PROGRESS.md`，补齐记录文件约定。

@@ -1,6 +1,6 @@
 # md-v
 
-English | [简体中文](README.zh-CN.md)
+English | [简体中文](README.zh.md)
 
 <p align="center"><img src="assets-src/icon.png" width="128" alt="md-v icon"></p>
 
@@ -13,6 +13,7 @@ Built on **Tauri v2** (Rust + system WebView), the single portable exe is only ~
 - **General text viewer/editor**: opening json / xml / yaml / toml / ini / sh / ps1 / py / js / ts / html / css / sql / rust / c / c++ / java / php / diff and other text files switches to per-extension syntax highlighting and code folding (language packs lazy-loaded from local resources, zero network), with the editor taking the full width — fully editable and savable
 - **Modern Markdown rendering**: pulldown-cmark parses GFM (tables / task lists / strikethrough / footnotes) on the Rust side, YAML frontmatter at the top of the file is rendered as a key-value table, highlight.js for code highlighting, KaTeX for math, Mermaid for diagrams (lazy-loaded — zero overhead for documents without diagrams)
 - **Multi-tab**: open multiple files at once, unsaved tabs show ●, drag-and-drop to open files
+- **Local document links**: preview links such as `./notes/example.md` open in tabs relative to the current document; Chinese/URL-encoded paths, absolute paths, `file://` URLs and heading fragments are supported. Save untitled documents before following relative links.
 - **Synchronized scrolling**: proportional scroll sync between editor and preview, toggleable
 - **Outline TOC**: h1–h4 sidebar with click-to-jump and scroll-highlighted current section
 - **Export**: one-click export to standalone HTML (inlined styles and fonts, works offline) / PDF (system print)
