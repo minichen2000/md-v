@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Render local `.html`/`.htm` links from the preview in an in-app overlay instead of opening their source in the editor: the page loads through the asset protocol, so its relative CSS/images/scripts and cross-page links work, while its scripts stay isolated from md-v's Tauri IPC. The overlay title bar offers "Open in browser" (system default browser) and "Close (Esc)".
+
 ## [0.7.3] - 2026-10-06
 
 ### Added

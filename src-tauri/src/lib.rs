@@ -21,6 +21,14 @@ fn write_file(path: String, content: String) -> Result<(), String> {
     std::fs::write(&path, content).map_err(|e| e.to_string())
 }
 
+// Hand a local file to the OS so it opens with its default program (a local
+// `.html` link goes to the default browser). Goes through our own command
+// instead of the `opener` plugin's `open_path` so no ACL path scope is needed.
+#[tauri::command]
+fn open_in_default_app(path: String) -> Result<(), String> {
+    tauri_plugin_opener::open_path(&path, None::<&str>).map_err(|e| e.to_string())
+}
+
 #[tauri::command]
 fn get_file_mtime(path: String) -> Result<u64, String> {
     let meta = std::fs::metadata(&path).map_err(|e| e.to_string())?;
@@ -393,6 +401,7 @@ pub fn run() {
             read_file,
             write_file,
             get_file_mtime,
+            open_in_default_app,
             render_markdown,
             take_pending_file,
             export_pdf,

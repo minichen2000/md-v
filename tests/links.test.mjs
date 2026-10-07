@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { bindPreviewLinks, resolvePreviewLink } from "../src/links.ts";
+import { bindPreviewLinks, isHtmlPath, resolvePreviewLink } from "../src/links.ts";
 
 const base = "C:\\data\\gitrepo\\gitee\\my-something\\README.md";
 const cases = [
@@ -35,6 +35,16 @@ test("external links, anchors, unsaved sources and unsupported schemes", () => {
   assert.deepEqual(resolvePreviewLink("./a.md", null), { kind: "missing-base" });
   for (const href of ["", "javascript:alert(1)", "data:text/html,hello"]) {
     assert.deepEqual(resolvePreviewLink(href, base), { kind: "ignore" });
+  }
+});
+
+test("html files route to the in-app page overlay, other local files stay in the editor", () => {
+  for (const path of ["C:\\site\\index.html", "/home/u/a.HTM", "C:\\showcase\\画廊.HTML"]) {
+    assert.equal(isHtmlPath(path), true, path);
+  }
+  for (const path of ["C:\\site\\index.htm.md", "C:\\notes\\a.md", "C:\\xhtml\\note.xhtml",
+    "C:\\site\\index.html.bak", "C:\\site\\index"]) {
+    assert.equal(isHtmlPath(path), false, path);
   }
 });
 

@@ -4,6 +4,12 @@ export type PreviewLink =
   | { kind: "file"; path: string; fragment: string }
   | { kind: "missing-base" | "ignore" };
 
+// Local pages render in the in-app overlay instead of the editor: a browser
+// document is meant to be displayed, not read as source text.
+export function isHtmlPath(path: string): boolean {
+  return /\.html?$/i.test(path);
+}
+
 function decode(value: string): string {
   try {
     return decodeURIComponent(value);

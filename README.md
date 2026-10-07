@@ -15,6 +15,7 @@ Built on **Tauri v2** (Rust + system WebView), the single portable exe is only ~
 - **Multi-tab**: open multiple files at once, unsaved tabs show ●, drag-and-drop to open files; switching back restores both editor and preview reading positions
 - **Image links**: local PNG/JPEG/GIF/WebP/BMP/SVG/ICO/AVIF links open in a modal image viewer. Scroll the wheel to zoom around the cursor, and hold the left mouse button to drag oversized images. Zoom percentage, pixel dimensions, fit-to-window and original-size buttons are available; close it or press Esc to continue reading (format support depends on the system WebView)
 - **Local document links**: preview links such as `./notes/example.md` open in tabs relative to the current document; Chinese/URL-encoded paths, absolute paths, `file://` URLs and heading fragments are supported. Save untitled documents before following relative links.
+- **Local page links**: `.html`/`.htm` links render in an in-app overlay rather than showing their source, loading relative stylesheets, images, scripts and page-to-page links normally (page scripts stay isolated from md-v). Each overlay offers "Open in browser" for the system default browser, and Esc closes it.
 - **Synchronized scrolling**: proportional scroll sync between editor and preview, toggleable
 - **Outline TOC**: h1–h4 sidebar with click-to-jump and scroll-highlighted current section
 - **Export**: one-click export to standalone HTML (inlined styles and fonts, works offline) / PDF (system print)

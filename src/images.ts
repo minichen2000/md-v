@@ -26,7 +26,7 @@ export function showImagePreview(path: string): void {
   original.textContent = t("imageOriginal");
   original.disabled = true;
   const close = document.createElement("button");
-  close.textContent = t("imageClose");
+  close.textContent = t("overlayClose");
   close.autofocus = true;
   close.onclick = () => dialog.close();
   toolbar.append(title, scale, fit, original, close);

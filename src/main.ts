@@ -16,8 +16,9 @@ import { createToc, type TocController } from "./toc";
 import { addRecent, getRecent, removeRecent, clearRecent } from "./recent";
 import { exportHtml, exportPdf, exportPdfToc } from "./export";
 import { icons } from "./icons";
-import { bindPreviewLinks, scrollToFragment } from "./links";
+import { bindPreviewLinks, isHtmlPath, scrollToFragment } from "./links";
 import { isImagePath, showImagePreview } from "./images";
+import { showHtmlPreview } from "./html-preview";
 import "./styles.css";
 
 const settings: Settings = loadSettings();
@@ -968,6 +969,9 @@ function wireEvents(): void {
       if (isImagePath(path)) {
         await invoke<number>("get_file_mtime", { path });
         showImagePreview(path);
+      } else if (isHtmlPath(path)) {
+        await invoke<number>("get_file_mtime", { path });
+        showHtmlPreview(path, fragment);
       } else {
         await openFiles([path], fragment);
       }

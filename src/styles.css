@@ -243,7 +243,8 @@ body.dark {
 
 /* ---- image preview ---- */
 
-.image-preview {
+.image-preview,
+.html-preview {
   width: min(1100px, 94vw);
   height: 90vh;
   padding: 0;
@@ -253,11 +254,19 @@ body.dark {
   color: var(--fg);
 }
 
-.image-preview[open] { display: flex; flex-direction: column; }
-.image-preview::backdrop { background: rgb(0 0 0 / 65%); }
-.image-toolbar { display: flex; align-items: center; gap: 12px; padding: 12px; border-bottom: 1px solid var(--border); }
-.image-toolbar span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.image-toolbar button { flex-shrink: 0; padding: 6px 12px; color: var(--fg); background: var(--bg-alt); border: 1px solid var(--border); border-radius: 4px; cursor: pointer; }
+.html-preview { width: min(1280px, 96vw); height: 92vh; }
+.image-preview[open],
+.html-preview[open] { display: flex; flex-direction: column; }
+.image-preview::backdrop,
+.html-preview::backdrop { background: rgb(0 0 0 / 65%); }
+.image-toolbar,
+.html-toolbar { display: flex; align-items: center; gap: 12px; padding: 12px; border-bottom: 1px solid var(--border); }
+.image-toolbar span,
+.html-toolbar span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.image-toolbar button,
+.html-toolbar button { flex-shrink: 0; padding: 6px 12px; color: var(--fg); background: var(--bg-alt); border: 1px solid var(--border); border-radius: 4px; cursor: pointer; }
+/* Pages that set no background of their own must not show ours through. */
+.html-frame { flex: 1; min-height: 0; width: 100%; border: 0; background: #fff; }
 .image-scale { min-width: 60px; text-align: right; font-variant-numeric: tabular-nums; }
 .image-viewport { position: relative; flex: 1; min-height: 0; overflow: hidden; margin: 16px; display: flex; align-items: center; justify-content: center; touch-action: none; user-select: none; }
 .image-viewport img { position: absolute; left: 0; top: 0; max-width: none; max-height: none; transform-origin: 0 0; }

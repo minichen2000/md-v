@@ -9,6 +9,11 @@
 
 ## 已完成
 
+- 2026-10-07：预览里的本地 `.html`/`.htm` 链接从"当作文本打开"改为应用内浮层渲染。`src/links.ts` 新增 `isHtmlPath`，`src/main.ts` 的预览链接分流在图片分支之后增加 html 分支（先 `get_file_mtime` 确认文件存在，再弹浮层），新模块 `src/html-preview.ts` 用 `<iframe src=convertFileSrc(path)>` 加载；浮层工具栏给文件名、`openInBrowser`（用浏览器打开）、关闭（Esc）三个元素，链接里的 `#fragment` 追加到 iframe URL 以便直接定位锚点。样式与图片浮层共用一组选择器（`.image-preview, .html-preview` 等），iframe 底色固定为白——页面自身不设背景时不能透出暗色主题的背景。
+- 本次决策（安全）：asset 协议下的 iframe 是跨源文档，而 Tauri 的 IPC 注入是 main-frame-only（`tauri-2.12.1/src/webview/mod.rs:949` 的 `for_main_frame_only: true`，`manager/webview.rs` 里 `__TAURI_INTERNALS__` 同样走 `main_frame_script`），页面脚本调不到 md-v 的任何命令，因此不再叠加 `sandbox` 属性，保留 localStorage/fetch 同目录文件等完整能力，尽量贴近浏览器表现。
+- 本次决策（外部浏览器）：`opener` 插件的 `open_path` 受 ACL 路径 scope 约束（`Scope::is_path_allowed` 经 `tauri::fs::Scope` 做 glob 匹配），为避免赌 `**` 在 Windows canonicalize 后的 verbatim 路径（`\\?\C:\…`）上的匹配语义，改为在 Rust 侧新增命令 `open_in_default_app`（直接调 `tauri_plugin_opener::open_path`），与 `read_file`/`write_file` 等自有文件命令保持一致。
+- 已知限制（如需接管再动 Rust）：浮层内点击 http(s) 外链会在该 iframe 里打开（对方站点带 `X-Frame-Options`/`frame-ancestors` 时会白屏），点 `.md` 链接显示原文，`target=_blank` 弹窗行为未定义——跨源 iframe 不能用 DOM 事件拦截，要接管得在 Rust 侧做导航拦截。
+- 本次验证：`node --test tests/*.test.mjs` 27/27 通过（新增 1 项 `isHtmlPath` 分类）；`npm run build:exe` 通过（fast profile）。
 - 2026-10-06：准备 v0.7.3 正式发布，包含本地文档链接、标签阅读位置恢复、图片浮层及滚轮缩放/拖动。版本与锁文件根包版本同步为 0.7.3，CHANGELOG 的 Unreleased 内容归档到版本段；本地使用 release 全量 LTO 构建，GitHub 按 v0.7.3 标签生成三平台绿色版产物。
 - 2026-10-06：图片预览新增滚轮缩放与左键拖动。`src/image-view.ts` 保存倍率/位移，滚轮以指针所在图像位置为锚点（触及边界时夹紧），小图居中、大图允许拖至各边缘；显示百分比，适应窗口与原始尺寸按钮均可居中复位。支持窗口尺寸变化、pointer capture/cancel 与关闭后事件/ResizeObserver 清理；禁用图片原生拖放，滚轮不会传到文档。按用户偏好仅运行代码回归与构建，不使用 Computer Use。
 - 本次验证：`node --test tests/*.test.mjs` 26/26 通过，新增 6 项覆盖指针锚点、倍率与边界、窗口变化、滚轮/指针事件、取消和销毁清理；`npm run build:exe` 通过（fast，1m 01s，产物 `src-tauri/target/fast/md-v.exe`）。12 个改动文本 UTF-8 检查和 `git diff --check` 通过；未进行桌面自动操作。
