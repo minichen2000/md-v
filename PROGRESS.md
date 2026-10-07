@@ -2,13 +2,14 @@
 
 ## 当前状态
 
-- 版本：0.7.3（`package.json` / `src-tauri/tauri.conf.json` / `src-tauri/Cargo.toml`，以及 npm/Cargo 锁文件的根包版本保持一致）
+- 版本：0.8.0（`package.json` / `src-tauri/tauri.conf.json` / `src-tauri/Cargo.toml`，以及 npm/Cargo 锁文件的根包版本保持一致）
 - 本地构建验证命令：日常 `npm run build:exe`（fast，产物 `src-tauri/target/fast/md-v.exe`）；发版 `npm run build:release`（release，产物 `src-tauri/target/release/md-v.exe`）
 - 改动提交后双推：`git push gitee main && git push github main`
 - Node：Vite 8 需要 Node ≥ 20（见 BUILDING.md）。系统 PATH 里的 `C:\software\node-v10.24.1-win-x64` 太老不可用；2026-09 起新版装在 `C:\software\node-v24.21.0-win-x64`（v24.21.0 LTS），构建时临时 `export PATH=/c/software/node-v24.21.0-win-x64:$PATH` 使用；如需全局切换，把系统 PATH 中的 node 目录改为该路径。
 
 ## 已完成
 
+- 2026-10-07：准备 v0.8.0 发布。内容：本地 `.html`/`.htm` 链接改为应用内浮层渲染（相对资源、页面间跳转、Esc 全 frame 桥接、「用浏览器打开」）；图片与网页浮层统一铺满窗口 + 细工具栏；图片浮层去掉容器 16px 边距、「适应窗口」即铺满。版本号五处同步 0.8.0（`package.json`、`package-lock.json` 两处、`tauri.conf.json`、`Cargo.toml`、`Cargo.lock` 的 md-v 包），CHANGELOG 的 Unreleased 归档为 `[0.8.0] - 2026-10-07` 并更新「当前状态」版本行。本地 release 档构建验证 + 双推 main + 双推 tag `v0.8.0`，GitHub Actions 出三平台绿色版 Release。
 - 2026-10-07：预览里的本地 `.html`/`.htm` 链接从"当作文本打开"改为应用内浮层渲染。`src/links.ts` 新增 `isHtmlPath`，`src/main.ts` 的预览链接分流在图片分支之后增加 html 分支（先 `get_file_mtime` 确认文件存在，再弹浮层），新模块 `src/html-preview.ts` 用 `<iframe src=convertFileSrc(path)>` 加载；浮层工具栏给文件名、`openInBrowser`（用浏览器打开）、关闭（Esc）三个元素，链接里的 `#fragment` 追加到 iframe URL 以便直接定位锚点。样式与图片浮层共用一组选择器（`.image-preview, .html-preview` 等），iframe 底色固定为白——页面自身不设背景时不能透出暗色主题的背景。
 - 本次决策（安全）：asset 协议下的 iframe 是跨源文档，而 Tauri 的 IPC 注入是 main-frame-only（`tauri-2.12.1/src/webview/mod.rs:949` 的 `for_main_frame_only: true`，`manager/webview.rs` 里 `__TAURI_INTERNALS__` 同样走 `main_frame_script`），页面脚本调不到 md-v 的任何命令，因此不再叠加 `sandbox` 属性，保留 localStorage/fetch 同目录文件等完整能力，尽量贴近浏览器表现。
 - 本次决策（外部浏览器）：`opener` 插件的 `open_path` 受 ACL 路径 scope 约束（`Scope::is_path_allowed` 经 `tauri::fs::Scope` 做 glob 匹配），为避免赌 `**` 在 Windows canonicalize 后的 verbatim 路径（`\\?\C:\…`）上的匹配语义，改为在 Rust 侧新增命令 `open_in_default_app`（直接调 `tauri_plugin_opener::open_path`），与 `read_file`/`write_file` 等自有文件命令保持一致。
