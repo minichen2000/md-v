@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Image and local-page preview overlays now fill the whole window (a dialog cannot be larger than its WebView) and use a slim title bar instead of a centred box with generous padding.
-- Image previews open filled: the image covers the window instead of leaving blank bands on the long axis, and the overflowing part is reachable by dragging. "Fill window" joins "Fit to window" (whole image) and "Original size" in the title bar; zooming out stops at the whole-image fit.
+- Image previews fill the window: "Fit to window" now covers the window (no blank band on the long axis, the overflowing part is reachable by dragging) and the image area has no inner margin, so nothing is left blank around it. Zooming out still stops at the whole-image fit.
 
 ### Added
 

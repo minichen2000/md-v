@@ -28,6 +28,6 @@
 - 网页浮层的 iframe 地址必须用 `src/html-preview.ts` 的 `pageAssetUrl()`，不能用 `convertFileSrc()`：后者把整条路径编码成一个 URL 段，页面内的相对图片/样式/链接会解析到协议根目录而全部 404。
 - 主窗口不在 `tauri.conf.json` 直接创建（该处 `create: false`）：`src-tauri/src/lib.rs` 的 `setup` 用 `WebviewWindowBuilder::from_config` 建窗口并注入 `ESCAPE_BRIDGE`（全 frame）。删这个 setup 或把它改回配置创建，浮层里焦点进了网页后 Esc 就不再生效。
 - `TabStore.add()` 不激活标签；`remove()` 返回候选标签 ID，交给 UI 显式激活。切换前分别保存编辑区/预览区滚动位置；异步预览须校验渲染代次，恢复位置期间禁止滚动同步反向覆盖。
-- 图片缩放/平移由 `src/image-view.ts` 统一维护几何状态与指针捕获；滚轮以指针为中心缩放，平移限制在图像边界，关闭浮层须释放事件和 ResizeObserver。视图模式 `fill`（铺满窗口，默认；等比放大到覆盖视口，多余部分靠拖动看）/ `fit`（整图可见，也是缩小的下限）/ `actual`（100%）/ `manual`（用户滚轮后的自由倍率），窗口变化时按当前模式重算。
+- 图片缩放/平移由 `src/image-view.ts` 统一维护几何状态与指针捕获；滚轮以指针为中心缩放，平移限制在图像边界，关闭浮层须释放事件和 ResizeObserver。视图模式 `fill`（默认；等比放大到覆盖视口，多余部分靠拖动看，界面上的「适应窗口」按钮就是它）/ `fit`（整图可见，仅作为滚轮缩小的下限保留）/ `actual`（100%，「原始尺寸」）/ `manual`（滚轮后的自由倍率），窗口变化时按当前模式重算；图片容器不得留 margin（用户明确要求铺满到窗口边缘，边距会表现为四周一圈白）。
 - frontmatter：文档开头正确闭合的 YAML frontmatter 由 Rust 侧 serde_yml 解析为键值表格渲染在正文上方；解析失败回退原文渲染（详见 PROGRESS.md 已知坑：不用 pulldown-cmark 的 ENABLE_YAML_STYLE_METADATA_BLOCKS 选项）
 - 行尾：`.gitattributes` 已把 `*.toml`/`Cargo.lock` 钉死为 LF——Tauri CLI 构建时会用 LF 重写 `Cargo.toml`（上游 tauri#8711 未修），Windows 上 `core.autocrlf=true` 会产生换行符噪音 diff，勿删该文件

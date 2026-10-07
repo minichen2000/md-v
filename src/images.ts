@@ -19,9 +19,6 @@ export function showImagePreview(path: string): void {
   title.title = path;
   const scale = document.createElement("output");
   scale.className = "image-scale";
-  const fill = document.createElement("button");
-  fill.textContent = t("imageFill");
-  fill.disabled = true;
   const fit = document.createElement("button");
   fit.textContent = t("imageFit");
   fit.disabled = true;
@@ -32,7 +29,7 @@ export function showImagePreview(path: string): void {
   close.textContent = t("overlayClose");
   close.autofocus = true;
   close.onclick = () => dialog.close();
-  toolbar.append(title, scale, fill, fit, original, close);
+  toolbar.append(title, scale, fit, original, close);
   const viewport = document.createElement("div");
   viewport.className = "image-viewport";
   viewport.title = t("imageGestures");
@@ -48,7 +45,7 @@ export function showImagePreview(path: string): void {
     if (!dialog.open) return;
     img.hidden = false;
     status.hidden = true;
-    fill.disabled = fit.disabled = original.disabled = false;
+    fit.disabled = original.disabled = false;
     title.textContent = `${fileName(path)} · ${img.naturalWidth} × ${img.naturalHeight}`;
     controls?.destroy();
     controls = bindImageView(viewport, img, (value) => {
@@ -59,8 +56,9 @@ export function showImagePreview(path: string): void {
     status.textContent = t("imageFailed");
     img.hidden = true;
   };
-  fill.onclick = () => controls?.reset("fill");
-  fit.onclick = () => controls?.reset("fit");
+  // "Fit to window" means the image covers the window: no blank band is left
+  // on the long axis, and the overflowing part is reachable by dragging.
+  fit.onclick = () => controls?.reset("fill");
   original.onclick = () => controls?.reset("actual");
   viewport.append(status, img);
   dialog.append(toolbar, viewport);
