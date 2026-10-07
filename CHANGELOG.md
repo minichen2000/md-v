@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Image and local-page preview overlays now fill the whole window (a dialog cannot be larger than its WebView) and use a slim title bar instead of a centred box with generous padding.
+
 ### Added
 
 - Render local `.html`/`.htm` links from the preview in an in-app overlay instead of opening their source in the editor: the page loads through the asset protocol with its directory structure intact, so relative CSS/images/scripts and page-to-page links resolve to their real siblings, while its scripts stay isolated from md-v's Tauri IPC. The overlay title bar offers "Open in browser" (system default browser) and "Close (Esc)"; Escape also works while the rendered page itself holds keyboard focus.

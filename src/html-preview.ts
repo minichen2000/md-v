@@ -56,12 +56,6 @@ export function showHtmlPreview(path: string, fragment: string): void {
     window.removeEventListener("message", onMessage);
     dialog.remove();
   }, { once: true });
-  dialog.addEventListener("click", (event) => {
-    if (event.target !== dialog) return;
-    const rect = dialog.getBoundingClientRect();
-    if (event.clientX < rect.left || event.clientX > rect.right ||
-        event.clientY < rect.top || event.clientY > rect.bottom) dialog.close();
-  });
   document.body.append(dialog);
   dialog.showModal();
 }

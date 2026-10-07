@@ -241,30 +241,34 @@ body.dark {
   line-height: 2.2;
 }
 
-/* ---- image preview ---- */
+/* ---- image / page preview overlays ---- */
 
+/* Both overlays fill the whole window: a dialog cannot grow past its viewport
+   (the WebView), and the window is the largest area available. */
 .image-preview,
 .html-preview {
-  width: min(1100px, 94vw);
-  height: 90vh;
+  inset: 0;
+  margin: 0;
+  width: auto;
+  height: auto;
+  max-width: none;
+  max-height: none;
   padding: 0;
-  border: 1px solid var(--border);
-  border-radius: 8px;
+  border: 0;
+  border-radius: 0;
+  overflow: hidden;
   background: var(--bg);
   color: var(--fg);
 }
 
-.html-preview { width: min(1280px, 96vw); height: 92vh; }
 .image-preview[open],
 .html-preview[open] { display: flex; flex-direction: column; }
-.image-preview::backdrop,
-.html-preview::backdrop { background: rgb(0 0 0 / 65%); }
 .image-toolbar,
-.html-toolbar { display: flex; align-items: center; gap: 12px; padding: 12px; border-bottom: 1px solid var(--border); }
+.html-toolbar { display: flex; align-items: center; gap: 8px; padding: 4px 10px; border-bottom: 1px solid var(--border); font-size: 12px; }
 .image-toolbar span,
 .html-toolbar span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .image-toolbar button,
-.html-toolbar button { flex-shrink: 0; padding: 6px 12px; color: var(--fg); background: var(--bg-alt); border: 1px solid var(--border); border-radius: 4px; cursor: pointer; }
+.html-toolbar button { flex-shrink: 0; padding: 2px 10px; font-size: 12px; color: var(--fg); background: var(--bg-alt); border: 1px solid var(--border); border-radius: 4px; cursor: pointer; }
 /* Pages that set no background of their own must not show ours through. */
 .html-frame { flex: 1; min-height: 0; width: 100%; border: 0; background: #fff; }
 .image-scale { min-width: 60px; text-align: right; font-variant-numeric: tabular-nums; }
