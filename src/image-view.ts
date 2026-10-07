@@ -8,8 +8,25 @@ export interface ImageView {
   y: number;
 }
 
+// `fill` covers the viewport (the point of "fill the window": the left-over
+// overflow is reachable by panning), `fit` shows the whole image, `actual` is
+// 100% and `manual` keeps whatever the user zoomed/panned to.
+export type ViewMode = "fill" | "fit" | "actual" | "manual";
+
+type ResetMode = Exclude<ViewMode, "manual">;
+
+// Whole image visible. Also the lower bound for zooming out.
 function fitScale(view: ImageView): number {
   return Math.min(1, view.viewportWidth / view.width, view.viewportHeight / view.height);
+}
+
+// Cover the viewport, without enlarging images smaller than it.
+function fillScale(view: ImageView): number {
+  return Math.min(1, Math.max(view.viewportWidth / view.width, view.viewportHeight / view.height));
+}
+
+function targetScale(view: ImageView, mode: ResetMode): number {
+  return mode === "actual" ? 1 : mode === "fit" ? fitScale(view) : fillScale(view);
 }
 
 function constrain(view: ImageView): ImageView {
@@ -22,8 +39,8 @@ function constrain(view: ImageView): ImageView {
   };
 }
 
-export function resetImageView(view: ImageView, fit: boolean): ImageView {
-  const scale = fit ? fitScale(view) : 1;
+export function resetImageView(view: ImageView, mode: ResetMode): ImageView {
+  const scale = targetScale(view, mode);
   return constrain({ ...view, scale,
     x: (view.viewportWidth - view.width * scale) / 2,
     y: (view.viewportHeight - view.height * scale) / 2,
@@ -40,20 +57,20 @@ export function panImageView(view: ImageView, dx: number, dy: number): ImageView
   return constrain({ ...view, x: view.x + dx, y: view.y + dy });
 }
 
-export function resizeImageView(view: ImageView, width: number, height: number, fit: boolean): ImageView {
+export function resizeImageView(view: ImageView, width: number, height: number, mode: ViewMode): ImageView {
   const resized = { ...view, viewportWidth: width, viewportHeight: height,
     x: view.x + (width - view.viewportWidth) / 2,
     y: view.y + (height - view.viewportHeight) / 2,
   };
-  return fit ? resetImageView(resized, true) : constrain(resized);
+  return mode === "manual" ? constrain(resized) : resetImageView(resized, mode);
 }
 
 export function bindImageView(viewport: HTMLElement, img: HTMLImageElement, onScale: (scale: number) => void) {
   let view = resetImageView({ width: img.naturalWidth, height: img.naturalHeight,
     viewportWidth: Math.max(1, viewport.clientWidth), viewportHeight: Math.max(1, viewport.clientHeight),
     scale: 1, x: 0, y: 0,
-  }, true);
-  let fit = true;
+  }, "fill");
+  let mode: ViewMode = "fill";
   let drag: { id: number; x: number; y: number } | null = null;
   const canPan = () => view.width * view.scale > view.viewportWidth || view.height * view.scale > view.viewportHeight;
   const draw = () => {
@@ -76,7 +93,7 @@ export function bindImageView(viewport: HTMLElement, img: HTMLImageElement, onSc
     const rect = viewport.getBoundingClientRect();
     const unit = event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? view.viewportHeight : 1;
     const delta = Math.max(-240, Math.min(240, event.deltaY * unit));
-    fit = false;
+    mode = "manual";
     view = zoomImageView(view, view.scale * Math.exp(-delta * 0.002), event.clientX - rect.left, event.clientY - rect.top);
     draw();
   };
@@ -103,16 +120,16 @@ export function bindImageView(viewport: HTMLElement, img: HTMLImageElement, onSc
   for (const name of ["pointerup", "pointercancel", "lostpointercapture"] as const) viewport.addEventListener(name, up);
   const observer = new ResizeObserver(() => {
     if (!viewport.clientWidth || !viewport.clientHeight) return;
-    view = resizeImageView(view, viewport.clientWidth, viewport.clientHeight, fit);
+    view = resizeImageView(view, viewport.clientWidth, viewport.clientHeight, mode);
     draw();
   });
   observer.observe(viewport);
   draw();
   return {
-    reset(toFit: boolean) {
+    reset(to: ResetMode) {
       endDrag();
-      fit = toFit;
-      view = resetImageView(view, fit);
+      mode = to;
+      view = resetImageView(view, mode);
       draw();
     },
     destroy() {

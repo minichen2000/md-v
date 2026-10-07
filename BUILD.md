@@ -15,9 +15,9 @@ This document describes how to build md-v from source, including tested workarou
 
 ## Build Steps
 
-Image zoom/pan regression is included in `tests/image-view.test.mjs`: cursor anchoring, zoom limits, pan bounds, resizing, pointer cancellation and event cleanup. Desktop/browser UI automation may be used directly to check a feature in the running app; code tests and builds remain the first choice for regressions.
+Image view regression is included in `tests/image-view.test.mjs`: fill/fit/actual/zoom modes, cursor anchoring, zoom limits, pan bounds, resizing, pointer cancellation and event cleanup. Desktop/browser UI automation may be used directly to check a feature in the running app; code tests and builds remain the first choice for regressions.
 
-Run `node --test tests/*.test.mjs` with Node 24 to check link routing, tab lifecycle/scroll state plus image and local-page classification. For UI regression, scroll a Markdown document, open a local document link, switch back (and close the linked tab), then verify both panes retain their positions. Open an image link, toggle original size/fit, and press Esc; the source document should remain in place. Follow a local `.html` link: the page should render in the overlay (relative images/CSS and page-to-page links working) instead of showing its source, "Open in browser" should hand it to the system browser, and Esc should return to the unchanged document — including after clicking inside the page, which moves focus into the frame.
+Run `node --test tests/*.test.mjs` with Node 24 to check link routing, tab lifecycle/scroll state plus image and local-page classification. For UI regression, scroll a Markdown document, open a local document link, switch back (and close the linked tab), then verify both panes retain their positions. Open an image link: it should cover the window by default (no blank band on the long axis) with fill/fit/original buttons working, then press Esc; the source document should remain in place. Follow a local `.html` link: the page should render in the overlay (relative images/CSS and page-to-page links working) instead of showing its source, "Open in browser" should hand it to the system browser, and Esc should return to the unchanged document — including after clicking inside the page, which moves focus into the frame.
 
 ```bash
 # 1. Install frontend dependencies

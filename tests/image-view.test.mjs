@@ -4,19 +4,31 @@ import { resetImageView, zoomImageView, panImageView, resizeImageView, bindImage
 
 const initial = { width: 2000, height: 1000, viewportWidth: 800, viewportHeight: 600, scale: 1, x: 0, y: 0 };
 
-test("fit preserves aspect ratio and centers the entire image without enlarging small images", () => {
-  const fit = resetImageView(initial, true);
-  assert.equal(fit.scale, 0.4);
-  assert.equal(fit.x, 0);
-  assert.equal(fit.y, 100);
-  const small = resetImageView({ ...initial, width: 200, height: 100 }, true);
+test("fill covers the window without enlarging an image smaller than it", () => {
+  const filled = resetImageView(initial, "fill");
+  assert.equal(filled.scale, 0.6);
+  assert.equal(filled.x, -200);
+  assert.equal(filled.y, 0);
+  const small = resetImageView({ ...initial, width: 200, height: 100 }, "fill");
   assert.equal(small.scale, 1);
   assert.equal(small.x, 300);
   assert.equal(small.y, 250);
 });
 
+test("fit shows the whole image, centred, and is the zoom-out bound", () => {
+  const fit = resetImageView(initial, "fit");
+  assert.equal(fit.scale, 0.4);
+  assert.equal(fit.x, 0);
+  assert.equal(fit.y, 100);
+  const small = resetImageView({ ...initial, width: 200, height: 100 }, "fit");
+  assert.equal(small.scale, 1);
+  assert.equal(small.x, 300);
+  assert.equal(small.y, 250);
+  assert.equal(zoomImageView(initial, 0, 400, 300).scale, 0.1);
+});
+
 test("zoom holds the image point under the cursor when unconstrained", () => {
-  const view = resetImageView(initial, false);
+  const view = resetImageView(initial, "actual");
   const cursor = { x: 317, y: 228 };
   const zoomed = zoomImageView(view, 1.6, cursor.x, cursor.y);
   assert.ok(Math.abs((cursor.x - view.x) / view.scale - (cursor.x - zoomed.x) / zoomed.scale) < 1e-9);
@@ -34,24 +46,28 @@ test("zoom has bounds and allows very large images to fit", () => {
 });
 
 test("drag reaches both image edges without moving the image out of view", () => {
-  const view = resetImageView(initial, false);
+  const view = resetImageView(initial, "actual");
   const right = panImageView(view, 100000, 100000);
   assert.equal(right.x, 0);
   assert.equal(right.y, 0);
   const left = panImageView(view, -100000, -100000);
   assert.equal(left.x, -1200);
   assert.equal(left.y, -400);
-  const fit = panImageView(resetImageView(initial, true), 100, -100);
+  const fit = panImageView(resetImageView(initial, "fit"), 100, -100);
   assert.equal(fit.x, 0);
   assert.equal(fit.y, 100);
 });
 
-test("resize refits fit mode and preserves the center image point in manual mode", () => {
-  const fit = resizeImageView(resetImageView(initial, true), 400, 400, true);
+test("resize refills fill/fit modes and keeps the centre point in manual mode", () => {
+  const filled = resizeImageView(resetImageView(initial, "fill"), 400, 400, "fill");
+  assert.equal(filled.scale, 0.4);
+  assert.equal(filled.x, -200);
+  assert.equal(filled.y, 0);
+  const fit = resizeImageView(resetImageView(initial, "fit"), 400, 400, "fit");
   assert.equal(fit.scale, 0.2);
   assert.equal(fit.y, 100);
-  const original = resetImageView(initial, false);
-  const resized = resizeImageView(original, 600, 400, false);
+  const original = resetImageView(initial, "actual");
+  const resized = resizeImageView(original, 600, 400, "manual");
   assert.equal((300 - resized.x) / resized.scale, (400 - original.x) / original.scale);
   assert.equal((200 - resized.y) / resized.scale, (300 - original.y) / original.scale);
 });
@@ -82,11 +98,13 @@ test("wheel and pointer handlers zoom, capture drag, cancel cleanly and detach o
       viewport.dispatchEvent(event);
       return event;
     };
-    assert.equal(scale, 0.4);
+    // Opens filled: the overflowing part is reachable by dragging.
+    assert.equal(scale, 0.6);
+    assert.equal(classes.has("can-pan"), true);
     const event = send("wheel", { deltaY: -120, deltaMode: 0, clientX: 410, clientY: 320 });
     assert.equal(event.defaultPrevented, true);
-    assert.ok(scale > 0.4);
-    controls.reset(false);
+    assert.ok(scale > 0.6);
+    controls.reset("actual");
     assert.equal(scale, 1);
     send("pointerdown", { button: 2, pointerId: 8, clientX: 410, clientY: 320 });
     assert.equal(captured.size, 0);
@@ -100,7 +118,9 @@ test("wheel and pointer handlers zoom, capture drag, cancel cleanly and detach o
     const stopped = img.style.transform;
     send("pointermove", { pointerId: 8, clientX: 610, clientY: 420 });
     assert.equal(img.style.transform, stopped);
-    controls.reset(true);
+    controls.reset("fill");
+    assert.equal(scale, 0.6);
+    controls.reset("fit");
     assert.equal(scale, 0.4);
     assert.equal(classes.has("can-pan"), false);
     controls.destroy();
