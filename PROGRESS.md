@@ -45,6 +45,7 @@
 
 ## 已知坑
 
+- 本机 git **没有走系统代理**（系统代理为 `127.0.0.1:10808`），直连 `github.com:443` 会超时；推 GitHub 需要 `git -c http.proxy=http://127.0.0.1:10808 push github main`（gitee 不需要）。2026-10-07 遇到 GitHub 服务端对 ref 更新返回 500（`unpack ok` 后 `ng refs/heads/main`，响应带 `X-GitHub-Request-Id`，状态页却显示正常），直连/代理、新分支/快进都一样失败——**隔几分钟重试即恢复**，属对方瞬时故障，不是本地配置问题。
 - pulldown-cmark 的 `ENABLE_YAML_STYLE_METADATA_BLOCKS` 选项并非只认文档开头：任何块起始处（顶格的）`---` 行，只要下一行非空且后续存在闭合 `---`/`...`，整段都会被当元数据剔除——正文中用 `---` 围起来的内容会被静默吞掉。因此 frontmatter 剔除采用手写的 `strip_yaml_frontmatter`（只认文档最开头），不启用该选项。
 - Tauri 窗口不设置 `center` 时由 Windows 决定初始位置，多显示器/任务栏场景下表现不可控；窗口初始位置务必显式配置。
 - `npm run tauri build` 后 `src-tauri/Cargo.toml` 会被 Tauri CLI 重写（feature injection，经 toml_edit 写出），即使内容无变化也落盘，且一律写成 LF；Windows 上 `core.autocrlf=true` 时表现为"仅换行符变化"的噪音 diff。上游 [tauri#8711](https://github.com/tauri-apps/tauri/issues/8711) 自 2024-01 起未修（cargo 对 `Cargo.lock` 有同类问题 [cargo#12897](https://github.com/rust-lang/cargo/issues/12897)）。已在仓库根加 `.gitattributes` 把 `*.toml`/`Cargo.lock` 钉死为 LF 防御；若 TortoiseGit 仍报该文件 modified 而 diff 为空，`git checkout -- <file>` 直接丢弃即可（内容从未变化）。
