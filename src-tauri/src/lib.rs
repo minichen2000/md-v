@@ -4,6 +4,17 @@ use pulldown_cmark::{html, Options, Parser};
 
 const MAX_FILE_SIZE: u64 = 50 * 1024 * 1024;
 
+// Injected into every frame. A page rendered in the preview overlay is
+// cross-origin, so while it holds focus its key events never reach the app and
+// Escape could not close the overlay; the frame forwards that key instead.
+const ESCAPE_BRIDGE: &str = r#"
+if (window.top !== window) {
+  window.addEventListener("keydown", function (event) {
+    if (event.key === "Escape") window.parent.postMessage("md-v:escape", "*");
+  }, true);
+}
+"#;
+
 #[derive(Default)]
 struct PendingFile(Mutex<Option<String>>);
 
@@ -392,6 +403,17 @@ pub fn run() {
             }
             let _ = app.emit("open-files", files);
         }))
+        .setup(|app| {
+            // The window is declared with `create: false` so it is built here and
+            // gets the all-frames script; everything else still comes from the
+            // config entry (title, size, centering).
+            if let Some(config) = app.config().app.windows.first().cloned() {
+                tauri::WebviewWindowBuilder::from_config(app.handle(), &config)?
+                    .initialization_script_for_all_frames(ESCAPE_BRIDGE)
+                    .build()?;
+            }
+            Ok(())
+        })
         .manage(PendingFile(Mutex::new(first_file_arg())))
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_dialog::init())
