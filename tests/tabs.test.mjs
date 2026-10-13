@@ -11,7 +11,7 @@ registerHooks({
     return nextResolve(specifier, context);
   },
 });
-const { TabStore } = await import("../src/tabs.ts");
+const { TabStore, unsavedTitles } = await import("../src/tabs.ts");
 const { isImagePath } = await import("../src/images.ts");
 
 test("opening another document leaves the source active until the UI saves its scroll", () => {
@@ -63,4 +63,27 @@ test("local image paths are classified before any UTF-8 file read", () => {
   for (const path of ["a.md", "a.png.md", "image.png/file.txt"]) {
     assert.equal(isImagePath(path), false);
   }
+});
+
+test("quit confirmation lists only tabs with unsaved edits", () => {
+  const store = new TabStore();
+  const saved = store.add("saved.md", "on disk");
+  const dirty = store.add("草稿.md", "edited");
+  const untitled = store.add(null, "new content");
+  dirty.dirty = true;
+  untitled.dirty = true;
+  assert.deepEqual(unsavedTitles(store.list()), { names: ["草稿.md", "未命名"], remaining: 0 });
+  assert.deepEqual(unsavedTitles([saved]), { names: [], remaining: 0 });
+});
+
+test("quit confirmation caps the file list and counts the rest", () => {
+  const store = new TabStore();
+  for (let i = 1; i <= 13; i++) {
+    const tab = store.add(`f${i}.md`, "edited");
+    tab.dirty = true;
+  }
+  const { names, remaining } = unsavedTitles(store.list(), 10);
+  assert.equal(names.length, 10);
+  assert.deepEqual(names, ["f1.md", "f2.md", "f3.md", "f4.md", "f5.md", "f6.md", "f7.md", "f8.md", "f9.md", "f10.md"]);
+  assert.equal(remaining, 3);
 });

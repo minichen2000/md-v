@@ -1,5 +1,6 @@
 import { invoke } from "@tauri-apps/api/core";
 import { getCurrentWebview } from "@tauri-apps/api/webview";
+import { getCurrentWindow, type CloseRequestedEvent } from "@tauri-apps/api/window";
 import { listen } from "@tauri-apps/api/event";
 import { open, save, ask } from "@tauri-apps/plugin-dialog";
 import { openUrl } from "@tauri-apps/plugin-opener";
@@ -8,7 +9,7 @@ import { undo, redo } from "@codemirror/commands";
 import { markdown } from "@codemirror/lang-markdown";
 import { loadSettings, saveSettings, type Settings } from "./settings";
 import { t, setLang, getLang } from "./i18n";
-import { TabStore, fileName, type Tab } from "./tabs";
+import { TabStore, fileName, unsavedTitles, type Tab } from "./tabs";
 import { createEditor } from "./editor";
 import { langForPath, loadLanguage, langDisplayName, isMarkdownPath, SUPPORTED_EXTS } from "./langs";
 import { renderPreview, setHljsTheme } from "./preview";
@@ -545,6 +546,37 @@ function closeTab(id: number): void {
   }
 }
 
+/* ---- quit confirmation ---- */
+
+let quitting = false;
+
+/** Ask before the window closes if any tab would lose unsaved edits. */
+async function confirmQuit(event: CloseRequestedEvent): Promise<void> {
+  if (quitting) {
+    event.preventDefault(); // a second request while the dialog is up
+    return;
+  }
+  const { names, remaining } = unsavedTitles(store.list());
+  if (names.length === 0) return; // nothing to lose: let the window close
+  quitting = true;
+  const list = names.map((name) => `• ${name}`).join("\n");
+  const more = remaining > 0 ? `\n${t("moreUnsaved").replace("{n}", String(remaining))}` : "";
+  const message = `${t("exitUnsaved")}\n\n${list}${more}`;
+  let ok: boolean;
+  try {
+    ok = await ask(message, {
+      title: "md-v",
+      kind: "warning",
+      okLabel: t("exitAnyway"),
+      cancelLabel: t("cancel"),
+    });
+  } catch {
+    ok = window.confirm(message); // fall back if the native dialog cannot be shown
+  }
+  quitting = false;
+  if (!ok) event.preventDefault();
+}
+
 function zoom(delta: number): void {
   settings.fontSize = Math.min(28, Math.max(10, settings.fontSize + delta));
   applySettings(false);
@@ -1061,6 +1093,13 @@ async function main(): Promise<void> {
 
   // single-instance: a second launch forwards its file args here
   void listen<string[]>("open-files", (e) => void enqueueOpen(e.payload)).catch(() => {});
+
+  // Unsaved edits are not restored by the session, so ask before closing.
+  try {
+    await getCurrentWindow().onCloseRequested((event) => confirmQuit(event));
+  } catch {
+    // not running inside Tauri
+  }
 
   try {
     // Paths from this process's own args plus any second-instance launches that

@@ -16,6 +16,15 @@ export function fileName(path: string): string {
   return path.split(/[\\/]/).pop() || path;
 }
 
+/**
+ * Titles of the tabs with unsaved edits, capped so the quit confirmation stays
+ * readable. `remaining` counts the names left out of `names`.
+ */
+export function unsavedTitles(tabs: Tab[], limit = 10): { names: string[]; remaining: number } {
+  const names = tabs.filter((tab) => tab.dirty).map((tab) => tab.title);
+  return { names: names.slice(0, limit), remaining: Math.max(0, names.length - limit) };
+}
+
 export class TabStore {
   private tabs: Tab[] = [];
   private activeId: number | null = null;
