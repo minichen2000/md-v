@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.1] - 2026-10-13
+
 ### Fixed
 
 - Open every selected file when several files are opened with md-v at once (Explorer multi-select, or multiple file arguments). Windows launches one process per selected file, and the extra launches forwarded their paths as `open-files` events while the first window was still loading, so only one file opened. Second-instance paths are now buffered in a pending queue until the frontend is ready, the startup argument list keeps every file (not just the first), and externally-triggered opens are serialized so a path arriving twice is deduped to a single tab.

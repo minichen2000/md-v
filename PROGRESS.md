@@ -2,13 +2,14 @@
 
 ## 当前状态
 
-- 版本：0.8.0（`package.json` / `src-tauri/tauri.conf.json` / `src-tauri/Cargo.toml`，以及 npm/Cargo 锁文件的根包版本保持一致）
+- 版本：0.8.1（`package.json` / `src-tauri/tauri.conf.json` / `src-tauri/Cargo.toml`，以及 npm/Cargo 锁文件的根包版本保持一致）
 - 本地构建验证命令：日常 `npm run build:exe`（fast，产物 `src-tauri/target/fast/md-v.exe`）；发版 `npm run build:release`（release，产物 `src-tauri/target/release/md-v.exe`）
 - 改动提交后双推：`git push gitee main && git push github main`
 - Node：Vite 8 需要 Node ≥ 20（见 BUILDING.md）。系统 PATH 里的 `C:\software\node-v10.24.1-win-x64` 太老不可用；2026-09 起新版装在 `C:\software\node-v24.21.0-win-x64`（v24.21.0 LTS），构建时临时 `export PATH=/c/software/node-v24.21.0-win-x64:$PATH` 使用；如需全局切换，把系统 PATH 中的 node 目录改为该路径。
 
 ## 已完成
 
+- 2026-10-13：准备 v0.8.1 发布。内容：修复"多选文件用 md-v 打开只开一个"。版本号同步 0.8.1（`package.json`、`package-lock.json` 两处、`tauri.conf.json`、`Cargo.toml`、`Cargo.lock` 的 md-v 包），CHANGELOG 的 Unreleased 归档到 `[0.8.1] - 2026-10-13` 并保留空 Unreleased 段，更新「当前状态」版本行。`node --test tests/*.test.mjs` 31/31 通过；release 档构建通过（3m 00s，产物 `src-tauri/target/release/md-v.exe` 7.99 MB，构建后 Tauri CLI 未重写 `Cargo.toml`）。双推 main + 双推 tag `v0.8.1`，GitHub Actions 出三平台绿色版 Release。
 - 2026-10-13：修复"多选文件用 md-v 打开只开一个"。根因两层：① Windows 静态 verb（`"%1"`）多选时 Explorer 每个文件拉起一个进程，二次进程靠单实例插件发 `open-files` 事件给首进程，但冷启动时首进程 webview 还没加载完、前端监听未注册，Tauri 事件不缓冲直接丢；② Rust 侧 `PendingFile` 只存一个路径，多文件参数本身也会丢。修法：`src-tauri/src/lib.rs` 改为 `PendingFiles { files: Mutex<Vec<String>>, ready: AtomicBool }`——单实例回调在前端就绪（`take_pending_files` 被调用）前往队列里压路径并照常发事件，就绪后只发事件；首进程自身参数也全量入队（`file_args()` 不再只取第一个）。`src/main.ts` 新增 `enqueueOpen` 串行链，`open-files` 监听与启动时的队列抽取都走它，同一路径经事件+队列到达两次时靠 `openFiles` 的既有标签检查去重（串行保证检查时序）。注册表无需改动（静态 verb 默认 `MultiSelectModel=Document`，多选时逐文件调用）。
 - 本次验证：`node --test tests/*.test.mjs` 31/31 通过；`npm run build:exe` 通过（fast profile）。功能实测（多选右键打开）未做桌面验证，待用户确认。
 - 2026-10-07：预览里的本地 `.html`/`.htm` 链接从"当作文本打开"改为应用内浮层渲染。`src/links.ts` 新增 `isHtmlPath`，`src/main.ts` 的预览链接分流在图片分支之后增加 html 分支（先 `get_file_mtime` 确认文件存在，再弹浮层），新模块 `src/html-preview.ts` 用 `<iframe src=convertFileSrc(path)>` 加载；浮层工具栏给文件名、`openInBrowser`（用浏览器打开）、关闭（Esc）三个元素，链接里的 `#fragment` 追加到 iframe URL 以便直接定位锚点。样式与图片浮层共用一组选择器（`.image-preview, .html-preview` 等），iframe 底色固定为白——页面自身不设背景时不能透出暗色主题的背景。
