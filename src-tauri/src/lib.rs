@@ -1,3 +1,4 @@
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Mutex;
 
 use pulldown_cmark::{html, Options, Parser};
@@ -15,8 +16,15 @@ if (window.top !== window) {
 }
 "#;
 
+// File paths to open that arrived before the frontend was ready to receive
+// `open-files` events (Tauri events are not buffered; a cold-start multi-select
+// launch fires them while the webview is still loading). Once the frontend
+// drains the queue (`ready`), second-instance launches go through events only.
 #[derive(Default)]
-struct PendingFile(Mutex<Option<String>>);
+struct PendingFiles {
+    files: Mutex<Vec<String>>,
+    ready: AtomicBool,
+}
 
 #[tauri::command]
 fn read_file(path: String) -> Result<String, String> {
@@ -142,8 +150,13 @@ fn render_markdown(src: String) -> String {
 }
 
 #[tauri::command]
-fn take_pending_file(state: tauri::State<'_, PendingFile>) -> Option<String> {
-    state.0.lock().ok()?.take()
+fn take_pending_files(state: tauri::State<'_, PendingFiles>) -> Vec<String> {
+    state.ready.store(true, Ordering::SeqCst);
+    state
+        .files
+        .lock()
+        .map(|mut f| std::mem::take(&mut *f))
+        .unwrap_or_default()
 }
 
 fn find_browser() -> Option<std::path::PathBuf> {
@@ -381,10 +394,11 @@ fn unregister_context_menu_impl() -> Result<(), String> {
     Err("not supported on this platform".into())
 }
 
-fn first_file_arg() -> Option<String> {
+fn file_args() -> Vec<String> {
     std::env::args()
         .skip(1)
-        .find(|a| std::path::Path::new(a).is_file())
+        .filter(|a| std::path::Path::new(a).is_file())
+        .collect()
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -401,6 +415,17 @@ pub fn run() {
                 let _ = w.unminimize();
                 let _ = w.set_focus();
             }
+            // Buffer the paths until the frontend has drained the queue; an
+            // `open-files` event emitted before the webview subscribes is lost.
+            if !files.is_empty() {
+                if let Some(state) = app.try_state::<PendingFiles>() {
+                    if !state.ready.load(Ordering::SeqCst) {
+                        if let Ok(mut pending) = state.files.lock() {
+                            pending.extend(files.iter().cloned());
+                        }
+                    }
+                }
+            }
             let _ = app.emit("open-files", files);
         }))
         .setup(|app| {
@@ -414,7 +439,10 @@ pub fn run() {
             }
             Ok(())
         })
-        .manage(PendingFile(Mutex::new(first_file_arg())))
+        .manage(PendingFiles {
+            files: Mutex::new(file_args()),
+            ready: AtomicBool::new(false),
+        })
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())
@@ -425,7 +453,7 @@ pub fn run() {
             get_file_mtime,
             open_in_default_app,
             render_markdown,
-            take_pending_file,
+            take_pending_files,
             export_pdf,
             context_menu_registered,
             register_context_menu,

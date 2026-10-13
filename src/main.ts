@@ -460,6 +460,21 @@ async function openFiles(paths: string[], fragment?: string): Promise<void> {
   }
 }
 
+// Serialize externally-triggered opens (single-instance events, startup queue):
+// the same path may arrive twice (event + pending queue, or one process per
+// file from a multi-select launch), and only serialized callers let the
+// existing-tab check in openFiles dedupe them.
+let openChain: Promise<void> = Promise.resolve();
+
+function enqueueOpen(paths: string[]): Promise<void> {
+  const p = openChain.then(() => openFiles(paths));
+  openChain = p.then(
+    () => {},
+    () => {},
+  );
+  return p;
+}
+
 async function openDialog(): Promise<void> {
   const result = await open({
     title: t("openDialogTitle"),
@@ -1045,12 +1060,14 @@ async function main(): Promise<void> {
   updateStatus();
 
   // single-instance: a second launch forwards its file args here
-  void listen<string[]>("open-files", (e) => void openFiles(e.payload)).catch(() => {});
+  void listen<string[]>("open-files", (e) => void enqueueOpen(e.payload)).catch(() => {});
 
   try {
-    const pending = await invoke<string | null>("take_pending_file");
-    if (pending) {
-      await openFiles([pending]);
+    // Paths from this process's own args plus any second-instance launches that
+    // arrived before this listener was registered.
+    const pending = await invoke<string[]>("take_pending_files");
+    if (pending.length > 0) {
+      await enqueueOpen(pending);
     } else if (settings.restoreTabs) {
       await restoreSession();
     }

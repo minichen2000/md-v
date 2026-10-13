@@ -22,7 +22,7 @@
 - 通用文本支持：`src/langs.ts` 按后缀识别语言，所有非 md 的 CodeMirror 语言包动态 import 懒加载（exe 内嵌资源，零网络）；非 md 文件为 plain 模式（无渲染区/TOC/导出，编辑区独占）
 - 右键注册：.md/.markdown 走 ProgID 完整关联；其它文件用 `HKCU\Software\Classes\*\shell\Open with md-v` 通配 verb（全文件生效，不动默认关联）；`LEGACY_EXTRA_EXTS` 仅用于卸载时清理旧版逐后缀注册
 - 前端版本号由 `vite.config.ts` 的 `define.__APP_VERSION__` 从 `package.json` 注入
-- 单实例：`tauri-plugin-single-instance`，二次启动把文件路径发 `open-files` 事件给前端开新标签
+- 单实例：`tauri-plugin-single-instance`，二次启动把文件路径发 `open-files` 事件给前端开新标签。多选打开时 Explorer 每个文件拉起一个进程，二次进程的路径先由 Rust 侧 `PendingFiles` 队列缓冲（Tauri 事件不缓冲，前端就绪前会丢），前端启动时用 `take_pending_files` 取走全部并经 `enqueueOpen` 串行打开（去重靠 `openFiles` 的既有标签检查），就绪后二次启动只走事件
 - 预览链接统一经 `src/links.ts` 拦截默认导航：本地路径以当前文档为基准，图片由 `src/images.ts`、本地 `.html`/`.htm` 由 `src/html-preview.ts` 用 asset URL 浮层显示，两者都不得送入 UTF-8 文本读取；其它本地文档复用标签打开流程，禁止回退到 WebView 页面跳转。回归用 `node --test tests/*.test.mjs`（Node 24）。
 - 网页浮层（`src/html-preview.ts`）刻意不加 iframe `sandbox`：Tauri 的 IPC 只注入主 frame，跨源 iframe 里的页面脚本触达不到 md-v 命令；浮层的「用浏览器打开」走自有命令 `open_in_default_app`（内部 `tauri_plugin_opener::open_path`），不经 opener 插件的 ACL 路径 scope——加权限或改回 `openPath` 前先看 PROGRESS.md 的说明。
 - 网页浮层的 iframe 地址必须用 `src/html-preview.ts` 的 `pageAssetUrl()`，不能用 `convertFileSrc()`：后者把整条路径编码成一个 URL 段，页面内的相对图片/样式/链接会解析到协议根目录而全部 404。
