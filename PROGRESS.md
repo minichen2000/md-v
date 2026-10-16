@@ -9,6 +9,8 @@
 
 ## 已完成
 
+- 2026-10-16：外部修改检测覆盖所有标签。此前 3 秒轮询（`src/main.ts`）只查 `store.active()`，非当前标签的文件被外部改了不会提示，切过去才弹。现在轮询遍历 `store.list()` 中所有有 path 的标签，串行 `await checkExternal(tab)`——`checkExternal` 自带 `externalChecking` 互斥且 `ask` 会等用户回答，串行保证同一时间最多一个弹窗、新 tick 撞上在途弹窗时自然空转。用户答"不重新加载"仍会记下新 mtime，不会每 3 秒重复弹。后台标签的"文件被删除"提醒同理现在也即时弹出。`reloadTab` 对非活动标签只更新数据和标签栏（不挂载编辑器），无需改动。`node --test tests/*.test.mjs` 33/33 通过。
+
 - 2026-10-16：外部修改提示带上文件名。此前 `checkExternal`（`src/main.ts`）发现 mtime 变化时只弹"文件已被外部修改，是否重新加载？"，多个标签同时打开时不知道是哪个文件。现在 i18n 的 `fileChangedReload`/`fileChangedConflict` 文案加 `{file}` 占位符（独立一行），`ask` 前替换为 `tab.path` 完整路径。`npm run build:exe` 通过。
 
 - 2026-10-13：未保存修改的退出提醒。此前关闭单个标签会提示（`closeTab` 用 `window.confirm`），但直接关窗口会静默丢弃编辑（会话只记路径、不存内容）。现在 `src/main.ts` 用 `@tauri-apps/api/window` 的 `getCurrentWindow().onCloseRequested()` 拦截窗口关闭：无脏标签直接放行；有则用原生 `ask` 弹窗列出未保存文件名（`src/tabs.ts` 新增 `unsavedTitles()`，默认最多列 10 个、其余折叠为"另有 N 个文件"），确定=退出、取消=`event.preventDefault()` 留在编辑器，对话框期间再次触发关闭请求也只 preventDefault。Tauri 侧只要 webview 注册了 `tauri://close-requested` 监听就会自动 `api.prevent_close()`（`tauri-2.12.0/src/manager/window.rs:177`），未 prevent 时由 JS 调 `destroy()` 真正关窗——因此需要在 `src-tauri/capabilities/default.json` 增加 `core:window:allow-destroy`（`core:window:default` 不含它）。i18n 新增 `exitUnsaved`/`moreUnsaved`/`exitAnyway`/`cancel`。

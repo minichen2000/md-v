@@ -1033,8 +1033,14 @@ function wireEvents(): void {
 
   window.setInterval(() => {
     if (document.visibilityState !== "visible") return;
-    const tab = store.active();
-    if (tab?.path) void checkExternal(tab);
+    void (async () => {
+      // Check every tab, not just the active one. Sequentially, so at most
+      // one reload prompt is open at a time (checkExternal also self-guards
+      // via externalChecking while a dialog awaits an answer).
+      for (const tab of store.list()) {
+        if (tab.path) await checkExternal(tab);
+      }
+    })();
   }, 3000);
 
   const splitter = $("#splitter");

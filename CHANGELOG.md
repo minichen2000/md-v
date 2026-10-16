@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Detect external modifications in background tabs: the periodic check used to look at the active tab only, so a file changed on disk prompted nothing until its tab was clicked. Every open tab is now polled, and its reload prompt (which names the file) appears without switching to it first.
+
 ### Added
 
 - The external-modification prompt now names the affected file: when an open file is changed on disk, the reload dialog shows its full path instead of only saying "a file" was modified.
