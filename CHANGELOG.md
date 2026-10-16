@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- The external-modification prompt now names the affected file: when an open file is changed on disk, the reload dialog shows its full path instead of only saying "a file" was modified.
 - Ask for confirmation when the window is closed while any tab still has unsaved edits: the dialog names the files that would lose their changes, "Quit" exits and "Cancel" returns to the editor. Closing a tab already asked; quitting the whole app used to discard the edits silently, because the session only remembers file paths.
 
 ## [0.8.1] - 2026-10-13

@@ -9,6 +9,8 @@
 
 ## 已完成
 
+- 2026-10-16：外部修改提示带上文件名。此前 `checkExternal`（`src/main.ts`）发现 mtime 变化时只弹"文件已被外部修改，是否重新加载？"，多个标签同时打开时不知道是哪个文件。现在 i18n 的 `fileChangedReload`/`fileChangedConflict` 文案加 `{file}` 占位符（独立一行），`ask` 前替换为 `tab.path` 完整路径。`npm run build:exe` 通过。
+
 - 2026-10-13：未保存修改的退出提醒。此前关闭单个标签会提示（`closeTab` 用 `window.confirm`），但直接关窗口会静默丢弃编辑（会话只记路径、不存内容）。现在 `src/main.ts` 用 `@tauri-apps/api/window` 的 `getCurrentWindow().onCloseRequested()` 拦截窗口关闭：无脏标签直接放行；有则用原生 `ask` 弹窗列出未保存文件名（`src/tabs.ts` 新增 `unsavedTitles()`，默认最多列 10 个、其余折叠为"另有 N 个文件"），确定=退出、取消=`event.preventDefault()` 留在编辑器，对话框期间再次触发关闭请求也只 preventDefault。Tauri 侧只要 webview 注册了 `tauri://close-requested` 监听就会自动 `api.prevent_close()`（`tauri-2.12.0/src/manager/window.rs:177`），未 prevent 时由 JS 调 `destroy()` 真正关窗——因此需要在 `src-tauri/capabilities/default.json` 增加 `core:window:allow-destroy`（`core:window:default` 不含它）。i18n 新增 `exitUnsaved`/`moreUnsaved`/`exitAnyway`/`cancel`。
 - 本次验证：`node --test tests/*.test.mjs` 33/33 通过（新增 2 项覆盖 `unsavedTitles` 的筛选与截断）；`npm run build`（tsc + vite）与 `npm run build:exe` 通过。桌面实测（fast exe + WebView2 CDP 调试端口 + 脚本点击原生对话框按钮）：① 打开文件、在编辑区敲入内容使标签变 ●（CDP `Input.insertText`），`CloseMainWindow()` 关窗 → 弹出 `#32770` 对话框，截图确认文案为"以下文件有未保存的修改，退出将丢失这些修改：/ • quit-test.md"，按钮「退出」「取消」；② 点「取消」→ 窗口仍在、`● quit-test.md` 与编辑内容都保留（`event.preventDefault()` 生效）；③ 再关窗并点「退出」→ 进程退出；④ 未修改时关窗直接退出、不弹窗（不回归原有行为）；⑤ 全程磁盘文件未被写入（会话不存内容 → 退出提醒确有必要）。
 - 2026-10-13：本次 release 档构建通过（`npm run build:release`，4m 12s，产物 `src-tauri/target/release/md-v.exe` 7.99 MB；构建后 `git status` 干净，Tauri CLI 未重写 `Cargo.toml`）。该功能仍在 CHANGELOG 的 Unreleased 段，二进制内版本号保持 0.8.1，未打 tag。

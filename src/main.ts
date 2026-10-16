@@ -619,10 +619,13 @@ async function checkExternal(tab: Tab): Promise<void> {
     }
     if (tab.deleted) tab.deleted = false; // file is back
     if (tab.mtime === null || mtime === tab.mtime) return;
-    const ok = await ask(tab.dirty ? t("fileChangedConflict") : t("fileChangedReload"), {
-      title: "md-v",
-      kind: "warning",
-    });
+    const ok = await ask(
+      (tab.dirty ? t("fileChangedConflict") : t("fileChangedReload")).replace("{file}", tab.path),
+      {
+        title: "md-v",
+        kind: "warning",
+      },
+    );
     if (ok) {
       await reloadTab(tab, mtime);
     } else {
